@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# Set your personal data here:
+rssfile="rss.xml"
+blogfile="2018.html"
+website="https://lukesmith.xyz/"
+dir=$(pwd)
+
+getHelp() { \
+	echo -e "This system will take the blog entries you write and add them into the RSS file and HTML file of your choosing. Set which files to use by editing the 'lb' file directly and changing the variables at the top.\n"
+	echo -e "To fully prepare these files, add the following line to both files where you want the content to be added:\n"
+	echo -e "<!-- LB -->\n"
+	echo -e "Usage: 'new': create new draft; 'finalize': finish draft and add it to the RSS and HTML page; 'delete': delete a finished page.\n"
+	echo -e "As you finalize posts, they will be appended in the appropriate format below that line.\n"
+	echo -e "Blog posts will be stored in 'blog/' and drafts will be in 'blog/.drafts/'. To delete drafts, you only need delete their .html files directly, but use the 'lb delete' command to remove finalized posts since they appear in three places."
+}
+
+listandReturn() { \
+	echo "Listing contents of $1."
+	ls $1 | nl
+	read -p "Pick an entry by number to $2, or press ctrl-c to cancel. " number
+	chosen=$(basename $(ls $1 | nl | grep -w  "$number" | awk '{print $2}'))
+	}
+
+getTitle() { \
+	echo "Post will be stored as draft in $dir/blog/.drafts until finalized."
+	read -p "Give a title for your post: " title
+	url=$(echo $title | sed -e "s/'\|\"\|=\|+\|_\|,\|:\|;\|?\|!\|@\|\*\|&\|(\|)\|[\|]\|<\|>//g;s/ /-/g" | tr '[:upper:]' '[:lower:]') ;}
+
+postNew() { \
+	mkdir -p $dir/blog/.drafts
+	echo -e "<h2 id='$url'>$title</h2><small>[<a aria-hidden=\"true\" href=\"$blogfile#$url\">link</a>&mdash;<a href=\"blog/$url.html\">standalone</a>]</small>\n\n<++>" >> $dir/blog/.drafts/$url.html && $EDITOR $dir/blog/.drafts/$url.html ;}
+
+finalize() { \
+	listandReturn $dir/blog/.drafts finalize
+	url=$(cat $dir/blog/.drafts/$chosen | grep -o "<h2 id='\(.\)*'>" | cut -d "'" -f2)
+	title=$(cat $dir/blog/.drafts/$chosen | grep -o "<h2 id='\(.\)*h2>" |sed -e 's/<[^>]*>//g')
+	echo "AddDescription \"$title\" $chosen" >> $dir/blog/.htaccess
+	rssdate=$(date '+%a, %d %b %Y %H:%M:%S %z')
+	webdate=$(date '+%a, %d %b %Y %H:%M:%S %z')
+	tmpdir=$(mktemp -d)
+	echo -e "\n<item>\n<title>$title</title>\n<guid>$website$blogfile#$url</guid>\n<pubDate>$rssdate</pubDate>\n<description><![CDATA[\n$(cat $dir/blog/.drafts/$chosen)\n]]></description>\n</item>\n"> $tmpdir/rss.xml
+	echo -e "\n<div class=\"entry\">\n$(cat $dir/blog/.drafts/$chosen)\n<small>$webdate</small>\n</div>\n" > $tmpdir/html.html
+	sed -i "/<!-- LB -->/r $tmpdir/html.html" $blogfile
+	sed -i "/<!-- LB -->/r $tmpdir/rss.xml" $rssfile
+	mv $dir/blog/.drafts/$chosen $dir/blog/$chosen
+}
+
+delete() { \
+	listandReturn "$dir/blog/*.html" delete
+	base=$(echo $chosen | cut -f1 -d'.')
+	read -p "Really delete \"$base\"? (y,N) " choice
+	[[ $choice =~ [Yy] ]] || exit
+	rm $dir/blog/$chosen && echo "Blog post deleted from directories."
+	sed -i "/<item/{:a;N;/<\/item>/!ba};/$base/d" $rssfile && echo "Entry removed from RSS feed file."
+	sed -i "/<div/{:a;N;/<\/div>/!ba};/$base/d" $blogfile && echo "HTML code removed from blogfile."
+	}
+
+case "$1" in
+	new) getTitle && postNew ;;
+	finalize) finalize ;;
+	delete) delete ;;
+	*) getHelp ;;
+esac

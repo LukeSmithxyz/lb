@@ -23,6 +23,7 @@ Finished posts are in `blog/`; Drafts are in `blog/.drafts/`. Use `./lb delete` 
 ## Installation
 
 + GNU sed is required.
++ Be sure that you own or have writing privileges in the given directory, so the script can create the required directory structure.
 + Download the `lb` script and put it in your website's home directory. The expectation is that your rolling blog file and RSS feed will be there as well.
 + Open the script and change the first few variables to match the files you use in your website.
 + Add markers for where the new blog posts are added. Don't skip this step. See below.

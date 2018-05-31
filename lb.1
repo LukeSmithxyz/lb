@@ -1,0 +1,76 @@
+.\" Manpage for lb.
+.\" Contact themanhimself@sgregoratto.me to correct errors or typos.
+
+.TH LB 1 "21 May 2018" "1.0"
+.SH NAME
+lb \- create a simple blog
+.SH SYNOPSIS
+.B lb
+.RB [ new | finalize | delete ]
+.SH DESCRIPTION
+lb is a script that creates a full HTTP blog with ATOM syndication in the 
+current working directory.
+.SH OPTIONS
+.TP
+.B new
+create a new draft blog post.
+drafts are stored under blog/.drafts/. if the directory does not exist,
+lb will create it under the current working directory.
+prompts for a title, after which the post will be written to
+blog/.drafts/TITLE.html and immediately opened in the user's file editor.
+the post can be saved and edited anytime before finalization.
+.TP
+.B finalize
+moves selected draft post into the main blog folder. a numbered list of all 
+draft posts is presented, in which the user selects the one that is to be
+finalized. on selection the post is moved to the blog/ folder and the index
+page, ATOM feed and .htaccess files are regenerated.
+.TP
+.B delete
+deletes selected post from the main blog folder. a numbered list of all 
+finalised posts is presented, in which the user selects the one that is to be
+deleted. on selection the post is deleted and the index, ATOM feed and
+\&.htaccess files are regenerated.
+.SH ENVIRONMENT VARIABLES
+.B lb
+has global variables that denote filenames and other constants. All can be 
+overridden either by editing them in the script or running
+.B lb
+in the form 'ENV=foo lb'
+.TP
+.B AUTHOR
+the author of finalized blog posts. Defaults to USER as defined by
+.BR bash(1).
+.TP
+.B INDEX
+the html file where all finalized posts are listed. defaults to 
+"index.html" in the current directory.
+.TP
+.B RSSFILE
+the ATOM feed file where all finalized posts are listed. defaults
+to "rss.xml" in the current directory.
+.TP
+.B SITE
+the site name where the 'blog' directory will be located in a web browser.
+must be in the form "[www.|blog.|...]domain.tld[/dir/...]", as it expands
+into "https://SITE/". defaults to HOSTNAME as defined by
+.BR bash(1).
+.TP
+.B STYLESHEET
+the css file where CSS styling rules are loaded from. defaults to
+style.css.
+.SH INFO
+up-to-date versions of 
+.B lb
+and this man page can be found at the upstream url:
+.I https://github.com/LukeSmithxyz/lb
+.SH BUGS
+if you believe you have found a bug in
+.B lb, 
+then you can submit a report at the upstream url.
+.SH AUTHORS
+Luke Smith 
+.I <luke@lukesmith.xyz>
+
+Stephen Gregoratto 
+.I <themanhimself@sgregoratto.me>

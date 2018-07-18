@@ -43,7 +43,7 @@ finalize() { \
 	rssdate=$(date '+%a, %d %b %Y %H:%M:%S %z')
 	webdate=$(date '+%a, %d %b %Y %H:%M:%S %z')
 	tmpdir=$(mktemp -d)
-	echo -e "\n<item>\n<title>$title</title>\n<guid>$website$blogfile#$url</guid>\n<pubDate>$rssdate</pubDate>\n<description><![CDATA[\n$(cat $dir/blog/.drafts/$chosen)\n]]></description>\n</item>\n"> $tmpdir/rss.xml
+	echo -e "\n<item>\n<title>$title</title>\n<guid>$website$blogfile#$url</guid>\n<pubDate>$rssdate</pubDate>\n<description><![CDATA[\n$(cat $dir/blog/.drafts/$chosen | awk 'a==1;/^$/{a=1}')\n]]></description>\n</item>\n"> $tmpdir/rss.xml
 	echo -e "\n<div class=\"entry\">\n$(cat $dir/blog/.drafts/$chosen)\n<small>$webdate</small>\n</div>\n" > $tmpdir/html.html
 	sed -i "/<!-- LB -->/r $tmpdir/html.html" $blogfile
 	sed -i "/<!-- LB -->/r $tmpdir/rss.xml" $rssfile

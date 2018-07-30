@@ -63,8 +63,17 @@ delete() { \
 	sed -i "/<div/{:a;N;/<\/div>/!ba};/$base/d" $blogfile && echo "HTML code removed from blogfile."
 	}
 
+discard() { \
+	listandReturn "$dir/blog/.drafts/*.html" discard
+	base=$(echo $chosen | cut -f1 -d'.')
+	read -p "Really discard \"$base\"? (y,N) " choice
+	[[ $choice =~ [Yy] ]] || exit
+	rm $dir/blog/.drafts/$chosen && echo "Blog draft discarded."
+	}
+
 case "$1" in
 	new) getTitle && postNew ;;
+	discard) discard ;;
 	finalize) finalize ;;
 	delete) delete ;;
 	*) getHelp ;;

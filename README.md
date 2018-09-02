@@ -27,6 +27,7 @@ format them in all the ways you could ever want. Here's what it will produce:
 ./lb finalize	# Finalize/publish a blog post draft.
 ./lb delete	# Delete a published blog post.
 ./lb discard	# Delete a draft of an entry.
+./lb edit	# Edit a draft of an entry.
 ```
 
 Use `./lb delete` to remove finished posts, because this command removes the

@@ -81,5 +81,6 @@ case "$1" in
 	discard) discard ;;
 	finalize) finalize ;;
 	delete) delete ;;
+	edit) listandReturn "$dir/blog/.drafts/*.html" edit && vim "$chosen" ;;
 	*) getHelp ;;
 esac

@@ -75,7 +75,7 @@ delete() { \
 discard() { \
 	listandReturn "$draftdir/*.html" discard
 	base=$(echo "$chosen" | cut -f1 -d'.')
-	read -rp "Really discard \"$base\"? (y/N) " choice
+	read -rp "Really discard \"$(basename $chosen)\"? (y/N) " choice
 	[[ $choice =~ [Yy] ]] || exit
 	rm "$chosen" && echo "Blog draft discarded."
 	}

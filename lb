@@ -32,14 +32,16 @@ listandReturn() { \
 getTitle() { \
 	echo "Post will be stored as draft in $draftdir until finalized."
 	read -rp "Give a title for your post: " title
-	url=$(echo $title | sed -e "s/'\|\"\|=\|+\|_\|,\|\.\|:\|;\|?\|!\|@\|\*\|&\|(\|)\|[\|]\|<\|>//g;s/ /-/g" | tr '[:upper:]' '[:lower:]')
+	url=$(echo "$title" | tr -d '[:punct:]' | tr " " "-" | tr '[:upper:]' '[:lower:]')
 	grep "$url" "$blogfile" &>/dev/null && lbdupnum=1 && while [ grep "$url" "$blogfile" ]; do lbdupnum=$((lbdupnum+1)); done
 	[ ! -z ${lbdupnum+x} ] && url="$url"-"$lbdupnum"
+	return 0
 	}
 
 postNew() { \
 	mkdir -p "$draftdir"
-	echo -e "<h2 id='$url'>$title</h2>\n<small>[<a href=\"$blogfile#$url\">link</a>&mdash;<a href=\"blog/$url.html\">standalone</a>]</small>\n\n<++>" >> "$draftdir"/$url.html && $EDITOR "$draftdir"/$url.html ;}
+	echo -e "<h2 id='$url'>$title</h2>\n<small>[<a href=\"$blogfile#$url\">link</a>&mdash;<a href=\"blog/$url.html\">standalone</a>]</small>\n\n<++>" >> "$draftdir"/$url.html && $EDITOR "$draftdir"/$url.html
+	}
 
 finalize() { \
 	listandReturn "$draftdir" finalize

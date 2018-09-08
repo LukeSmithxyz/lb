@@ -11,6 +11,11 @@ dir=$(pwd)
 draftdir="$dir"/blog/.drafts
 blogdir="$dir"/blog
 
+# Set vi if $EDITOR not set
+if [ -z $EDITOR ];
+	then EDITOR="vi";
+fi;
+
 # See other variables defined later, such as `header` and `webdate` for more customizability.
 
 getHelp() { \

@@ -49,7 +49,6 @@ postNew() { \
 	}
 
 finalize() { \
-	listandReturn "$draftdir" finalize
 	url=$(grep -o "<h2 id='\(.\)*'>" "$draftdir"/"$chosen" | cut -d "'" -f2)
 	title=$(grep -o "<h2 id='\(.\)*h2>" "$draftdir"/"$chosen" | sed -e 's/<[^>]*>//g')
 	echo "AddDescription \"$title\" $chosen" >> "$blogdir"/.htaccess
@@ -69,7 +68,6 @@ finalize() { \
 }
 
 delete() { \
-	listandReturn "$blogdir/*.html" delete
 	base=$(basename $(echo "$chosen" | cut -f1 -d'.'))
 	read -rp "Really delete \"$base\"? (y/N) " choice
 	[[ $choice =~ [Yy] ]] || exit
@@ -80,7 +78,6 @@ delete() { \
 	}
 
 discard() { \
-	listandReturn "$draftdir/*.html" discard
 	base=$(echo "$chosen" | cut -f1 -d'.')
 	read -rp "Really discard \"$(basename $chosen)\"? (y/N) " choice
 	[[ $choice =~ [Yy] ]] || exit
@@ -89,9 +86,9 @@ discard() { \
 
 case "$1" in
 	new) getTitle && postNew ;;
-	discard) discard ;;
-	finalize) finalize ;;
-	delete) delete ;;
+	discard) listandReturn "$draftdir/*.html" discard && discard ;;
+	finalize) listandReturn "$draftdir" finalize && finalize ;;
+	delete) listandReturn "$blogdir/*.html" delete && delete ;;
 	edit) listandReturn "$draftdir/*.html" edit && vim "$chosen" ;;
 	*) getHelp ;;
 esac

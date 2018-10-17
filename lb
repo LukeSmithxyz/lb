@@ -73,8 +73,8 @@ delete() { \
 	base=$(basename $(echo "$chosen" | cut -f1 -d'.'))
 	read -rp "Really delete \"$base\"? (y/N) " choice
 	[[ $choice =~ [Yy] ]] || exit
-	sed -i "/<item/{:a;N;/<\/item>/!ba};/$base/d" $rssfile && echo "Entry removed from RSS feed file."
-	sed -i "/<div/{:a;N;/<\/div>/!ba};/$base/d" $blogfile && echo "HTML code removed from blogfile."
+	sed -i "/<item/{:a;N;/<\/item>/!ba};/#$base<\/guid/d" $rssfile && echo "Entry removed from RSS feed file."
+	sed -i "/<div/{:a;N;/<\/div>/!ba};/id='$base'/d" $blogfile && echo "HTML code removed from blogfile."
 	sed -i "/<li>.*<a href=\"blog\/$base.html\">/d" $indexfile && echo "Index file entry removed."
 	rm "$chosen" && echo "Blog post deleted from directories."
 	}

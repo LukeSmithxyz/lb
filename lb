@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 # Set your personal data here:
 rssfile="rss.xml"
@@ -10,12 +10,8 @@ author="<a href=\"$website\">Luke Smith<\/a>"
 dir=$(pwd)
 draftdir="$dir"/blog/.drafts
 blogdir="$dir"/blog
-
 # Set vi if $EDITOR not set
-if [ -z $EDITOR ];
-	then EDITOR="vi";
-fi;
-
+[ -z $EDITOR ] && EDITOR="vi";
 # See other variables defined later, such as `header` and `webdate` for more customizability.
 
 getHelp() { \

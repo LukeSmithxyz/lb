@@ -67,3 +67,8 @@ blog can work. The HTML entries create divs with the id "entry", which allows
 you to modify them with a CSS stylesheet.
 
 Browse my blog for an idea of how it works (links above).
+
+## To-Do
+
+- Make a function for revising already published entries, updating in all
+  output locations.

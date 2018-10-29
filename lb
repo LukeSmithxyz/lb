@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 # Set your personal data here:
 rssfile="rss.xml"
@@ -33,20 +33,26 @@ listandReturn() { \
 getTitle() { \
 	echo "Post will be stored as draft in $draftdir until finalized."
 	read -rp "Give a title for your post: " title
+	title=$(echo "$title" | tr -d '[=/=]' | tr -d '[=\=]')
 	url=$(echo "$title" | tr -d '[:punct:]' | tr " " "-" | tr '[:upper:]' '[:lower:]')
-	grep "$url" "$blogfile" &>/dev/null && lbdupnum=1 && while [ grep "$url" "$blogfile" ]; do lbdupnum=$((lbdupnum+1)); done
+
+	[ -z $url ] && echo "Error: Empty title!" && return 0;
+
+	grep "id='$url'" "$blogfile" &>/dev/null && lbdupnum=1 && while [ grep "$url" "$blogfile" ]; do lbdupnum=$((lbdupnum+1)); done
 	[ ! -z ${lbdupnum+x} ] && url="$url"-"$lbdupnum"
 	return 0
 	}
 
 postNew() { \
 	mkdir -p "$draftdir"
-	echo -e "<h2 id='$url'>$title</h2>\n<small>[<a href=\"$blogfile#$url\">link</a>&mdash;<a href=\"blog/$url.html\">standalone</a>]</small>\n\n<++>" >> "$draftdir"/$url.html && $EDITOR "$draftdir"/$url.html
-	}
+	[ -f "$draftdir"/"$url"'.html' ] || \
+	echo -e "<h2 id='$url'>$title</h2>\n<small>[<a href=\"$blogfile#$url\">link</a>&mdash;<a href=\"blog/$url.html\">standalone</a>]</small>\n\n<++>" >> "$draftdir"/$url.html
+	$EDITOR "$draftdir"/$url.html
+}
 
 finalize() { \
 	url=$(grep -o "<h2 id='\(.\)*'>" "$draftdir"/"$chosen" | cut -d "'" -f2)
-	title=$(grep -o "<h2 id='\(.\)*h2>" "$draftdir"/"$chosen" | sed -e 's/<[^>]*>//g')
+	title=$(grep -o "<h2 id='\(.\)*h2>" "$draftdir"/"$chosen" | sed -E 's/<[^>]*>//g')
 	echo "AddDescription \"$title\" $chosen" >> "$blogdir"/.htaccess
 	rssdate=$(date '+%a, %d %b %Y %H:%M:%S %z')
 	webdate=$(date '+%a, %d %b %Y %H:%M:%S %z')
@@ -85,6 +91,6 @@ case "$1" in
 	discard) listandReturn "$draftdir/*.html" discard && discard ;;
 	finalize) listandReturn "$draftdir" finalize && finalize ;;
 	delete) listandReturn "$blogdir/*.html" delete && delete ;;
-	edit) listandReturn "$draftdir/*.html" edit && vim "$chosen" ;;
+	edit) listandReturn "$draftdir/*.html" edit && $EDITOR "$chosen" ;;
 	*) getHelp ;;
 esac

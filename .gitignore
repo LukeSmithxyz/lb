@@ -1,0 +1,3 @@
+#exclude blog
+/blog
+!/blog/this-is-what-a-post-looks-like.html

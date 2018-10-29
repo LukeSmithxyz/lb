@@ -34,6 +34,9 @@ getTitle() { \
 	echo "Post will be stored as draft in $draftdir until finalized."
 	read -rp "Give a title for your post: " title
 	url=$(echo "$title" | tr -d '[:punct:]' | tr " " "-" | tr '[:upper:]' '[:lower:]')
+
+	[ -z $url ] && echo "Error: Empty title!" && return 0;
+
 	grep "$url" "$blogfile" &>/dev/null && lbdupnum=1 && while [ grep "$url" "$blogfile" ]; do lbdupnum=$((lbdupnum+1)); done
 	[ ! -z ${lbdupnum+x} ] && url="$url"-"$lbdupnum"
 	return 0

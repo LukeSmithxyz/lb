@@ -89,7 +89,6 @@ delete() {
 }
 
 discard() { \
-echo $chosen;
 	if [[ -n $chosen ]]; then
 		base=$(echo "$chosen" | cut -f1 -d'.')
 		read -rp "Really discard \"$(basename $chosen)\"? (y/N) " choice

@@ -30,8 +30,7 @@ listandReturn() {
 		read -rp "Pick an entry by number to $2, or press ctrl-c to cancel. " number
 		chosen=$(ls -rc $1 | nl | grep -w  "$number" | awk '{print $2}')
 	else
-		chosen=$(ls -rc $1 | grep $chosen.html ) || echo "Error: File not found" && exit 1
-		echo "epic"
+		chosen=$(ls -rc $1 | grep $chosen.html ) || $(echo "Error: File not found" && exit 1)
 	fi
 }
 
@@ -78,7 +77,7 @@ finalize() { \
 }
 
 delete() {
-	if [[ -z $chosen ]]; then
+	if [[ -n $chosen ]]; then
 		base=$(basename $(echo "$chosen" | cut -f1 -d'.'))
 		read -rp "Really delete \"$base\"? (y/N) " choice
 		[[ $choice =~ [Yy] ]] || exit 1
@@ -90,12 +89,13 @@ delete() {
 }
 
 discard() { \
-	if [[ -z $chosen ]]; then
+echo $chosen;
+	if [[ -n $chosen ]]; then
 		base=$(echo "$chosen" | cut -f1 -d'.')
 		read -rp "Really discard \"$(basename $chosen)\"? (y/N) " choice
 		[[ $choice =~ [Yy] ]] || exit 1
 	fi
-		rm "$chosen" && echo "Blog draft discarded."
+	rm "$chosen" && echo "Blog draft discarded."
 }
 
 #optional argument when running this script

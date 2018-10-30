@@ -23,25 +23,33 @@ getHelp() { \
 	echo -e "Blog posts will be stored in 'blog/' and drafts will be in 'blog/.drafts/'. To delete drafts, you only need delete their .html files directly, but use the 'lb delete' command to remove finalized posts since they appear in three places."
 }
 
-listandReturn() { \
-	echo "Listing contents of $1."
-	ls -rc $1 | awk -F '/' '{print $NF}' | nl
-	read -rp "Pick an entry by number to $2, or press ctrl-c to cancel. " number
-	chosen=$(ls -rc $1 | nl | grep -w  "$number" | awk '{print $2}')
-	}
+listandReturn() { 
+	if [[ -z $chosen ]]; then
+		echo "Listing contents of $1."
+		ls -rc $1 | awk -F '/' '{print $NF}' | nl
+		read -rp "Pick an entry by number to $2, or press ctrl-c to cancel. " number
+		chosen=$(ls -rc $1 | nl | grep -w  "$number" | awk '{print $2}')
+	else 
+		chosen=$(ls -rc $1 | grep $chosen.html ) || \
+	   	echo "Error: File not found" && exit 1	
+	fi
+}
 
-getTitle() { \
-	echo "Post will be stored as draft in $draftdir until finalized."
-	read -rp "Give a title for your post: " title
+getTitle() { 
+	if [[ -z $title ]]; then
+		echo "Post will be stored as draft in $draftdir until finalized."
+		read -rp "Give a title for your post: " title
+	fi
 	title=$(echo "$title" | tr -d '[=/=]' | tr -d '[=\=]')
 	url=$(echo "$title" | tr -d '[:punct:]' | tr " " "-" | tr '[:upper:]' '[:lower:]')
 
-	[ -z $url ] && echo "Error: Empty title!" && return 0;
+	[ -z $url ] && echo "Error: Empty title!" && exit 1;
 
-	grep "id='$url'" "$blogfile" &>/dev/null && lbdupnum=1 && while [ grep "$url" "$blogfile" ]; do lbdupnum=$((lbdupnum+1)); done
+	grep "id='$url'" "$blogfile" &>/dev/null && lbdupnum=1 && 
+	while [ grep "$url" "$blogfile" ]; do lbdupnum=$((lbdupnum+1)); done
 	[ ! -z ${lbdupnum+x} ] && url="$url"-"$lbdupnum"
 	return 0
-	}
+}
 
 postNew() { \
 	mkdir -p "$draftdir"
@@ -72,7 +80,7 @@ finalize() { \
 delete() { \
 	base=$(basename $(echo "$chosen" | cut -f1 -d'.'))
 	read -rp "Really delete \"$base\"? (y/N) " choice
-	[[ $choice =~ [Yy] ]] || exit
+	[[ $choice =~ [Yy] ]] || exit 1
 	sed -i "/<item/{:a;N;/<\/item>/!ba};/#$base<\/guid/d" $rssfile && echo "Entry removed from RSS feed file."
 	sed -i "/<div/{:a;N;/<\/div>/!ba};/id='$base'/d" $blogfile && echo "HTML code removed from blogfile."
 	sed -i "/<li>.*<a href=\"blog\/$base.html\">/d" $indexfile && echo "Index file entry removed."
@@ -85,6 +93,9 @@ discard() { \
 	[[ $choice =~ [Yy] ]] || exit
 	rm "$chosen" && echo "Blog draft discarded."
 	}
+
+#optional argument when running this script
+[ -n "$2" ] && title="$2"; chosen="$2" 
 
 case "$1" in
 	new) getTitle && postNew ;;

@@ -98,7 +98,7 @@ discard() { \
 }
 
 #optional argument when running this script
-[ -n "$2" ] && title="$2"; chosen="$2"
+[ -n "$2" ] && title=${@:2}; chosen=$title
 
 case "$1" in
 	new) getTitle && postNew ;;

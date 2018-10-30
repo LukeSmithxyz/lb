@@ -30,8 +30,8 @@ listandReturn() {
 		read -rp "Pick an entry by number to $2, or press ctrl-c to cancel. " number
 		chosen=$(ls -rc $1 | nl | grep -w  "$number" | awk '{print $2}')
 	else
-		chosen=$(ls -rc $1 | grep $chosen.html ) || \
-		echo "Error: File not found" && exit 1
+		chosen=$(ls -rc $1 | grep $chosen.html ) || echo "Error: File not found" && exit 1
+		echo "epic"
 	fi
 }
 
@@ -77,22 +77,26 @@ finalize() { \
 	rm "$draftdir"/"$chosen"
 }
 
-delete() { \
-	base=$(basename $(echo "$chosen" | cut -f1 -d'.'))
-	read -rp "Really delete \"$base\"? (y/N) " choice
-	[[ $choice =~ [Yy] ]] || exit 1
+delete() {
+	if [[ -z $chosen ]]; then
+		base=$(basename $(echo "$chosen" | cut -f1 -d'.'))
+		read -rp "Really delete \"$base\"? (y/N) " choice
+		[[ $choice =~ [Yy] ]] || exit 1
+	fi
 	sed -i "/<item/{:a;N;/<\/item>/!ba};/#$base<\/guid/d" $rssfile && echo "Entry removed from RSS feed file."
 	sed -i "/<div/{:a;N;/<\/div>/!ba};/id='$base'/d" $blogfile && echo "HTML code removed from blogfile."
 	sed -i "/<li>.*<a href=\"blog\/$base.html\">/d" $indexfile && echo "Index file entry removed."
 	rm "$chosen" && echo "Blog post deleted from directories."
-	}
+}
 
 discard() { \
-	base=$(echo "$chosen" | cut -f1 -d'.')
-	read -rp "Really discard \"$(basename $chosen)\"? (y/N) " choice
-	[[ $choice =~ [Yy] ]] || exit
-	rm "$chosen" && echo "Blog draft discarded."
-	}
+	if [[ -z $chosen ]]; then
+		base=$(echo "$chosen" | cut -f1 -d'.')
+		read -rp "Really discard \"$(basename $chosen)\"? (y/N) " choice
+		[[ $choice =~ [Yy] ]] || exit 1
+	fi
+		rm "$chosen" && echo "Blog draft discarded."
+}
 
 #optional argument when running this script
 [ -n "$2" ] && title="$2"; chosen="$2"

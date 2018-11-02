@@ -7,7 +7,7 @@ website="https://lukesmith.xyz/"
 indexfile="blogindex.html"
 stylesheet="..\/style.css" # Characters should be escaped for this variable.
 author="<a href=\"$website\">Luke Smith<\/a>"
-dir=$(pwd)
+dir=$(cd $(dirname ${BASH_SOURCE[0]})&& pwd)
 draftdir="$dir"/blog/.drafts
 blogdir="$dir"/blog
 # Set vi if $EDITOR not set

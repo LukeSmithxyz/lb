@@ -1,96 +1,77 @@
-#!/usr/bin/env bash
-
-# Set your personal data here:
-rssfile="rss.xml"
+#!/bin/bash
+name="Luke Smith"
+webdir="$(pwd)"
+website="https://lukesmith.xyz/" # Keep a trailing slash.
+blogfile="blog.html"
+css="../style.css"
 blogfile="2018.html"
-website="https://lukesmith.xyz/"
 indexfile="blogindex.html"
-stylesheet="..\/style.css" # Characters should be escaped for this variable.
-author="<a href=\"$website\">Luke Smith<\/a>"
-dir=$(pwd)
-draftdir="$dir"/blog/.drafts
-blogdir="$dir"/blog
-# Set vi if $EDITOR not set
-[ -z $EDITOR ] && EDITOR="vi";
-# See other variables defined later, such as `header` and `webdate` for more customizability.
+rssfile="rss.xml"
+[ -z "$EDITOR" ] && EDITOR="vim"
 
-getHelp() { \
-	echo -e "This system will take the blog entries you write and add them into the RSS file and HTML file of your choosing. Set which files to use by editing the 'lb' file directly and changing the variables at the top.\n"
-	echo -e "To fully prepare these files, add the following line to both files where you want the content to be added:\n"
-	echo -e "<!-- LB -->\n"
-	echo -e "Usage: 'new': create new draft; 'finalize': finish draft and add it to the RSS and HTML page; 'delete': delete a finished page.\n"
-	echo -e "As you finalize posts, they will be appended in the appropriate format below that line.\n"
-	echo -e "Blog posts will be stored in 'blog/' and drafts will be in 'blog/.drafts/'. To delete drafts, you only need delete their .html files directly, but use the 'lb delete' command to remove finalized posts since they appear in three places."
-}
+[ ! -d blog/.drafts ] &&
+read -erp "Initialize blog in $webdir?" ask &&
+	if [ "$ask" = "y" ]; then
+	printf "Initializing blog system...\\n"
+	mkdir -pv "$webdir/blog/.drafts" || printf "Error. Do you have write permissions in this directory?\\n"
+	echo "Options +Indexes" > "$webdir/blog/.htaccess"
+else
+	exit
+fi
 
-listandReturn() { \
-	echo "Listing contents of $1."
-	ls -rc $1 | awk -F '/' '{print $NF}' | nl
-	read -rp "Pick an entry by number to $2, or press ctrl-c to cancel. " number
-	chosen=$(ls -rc $1 | nl | grep -w  "$number" | awk '{print $2}')
-	}
+newpost() { read -erp "Give a title for your post:
+	" title
+	echo "$title" | grep "\"" >/dev/null && printf "Double quotation marks (\") are not allowed in entry titles.\\n" && exit
+	url="$(echo "$title" | tr -d '[:punct:]' | tr '[:upper:]' '[:lower:]' | tr ' ' '-')"
+	echo "AddDescription \"$title\" \"$url.html\"" >> "$webdir/blog/.htaccess" || { echo "Error: Is htaccess writeable?"; exit; }
+	[ -f "$webdir/blog/.drafts/$url.html" ] && echo "There is already an existing draft entry of that same name/URL."
+	[ -f "$webdir/blog/$url.html" ] && echo "There is already an existing published entry of that same name/URL."
+	$EDITOR "$webdir/blog/.drafts/$url.html" ;}
 
-getTitle() { \
-	echo "Post will be stored as draft in $draftdir until finalized."
-	read -rp "Give a title for your post: " title
-	title=$(echo "$title" | tr -d '[=/=]' | tr -d '[=\=]')
-	url=$(echo "$title" | tr -d '[:punct:]' | tr " " "-" | tr '[:upper:]' '[:lower:]')
+listandReturn() { printf "Listing contents of %s.\\n" "$1"
+	ls -rc "$1" | awk -F '/' '{print $NF}' | nl
+	read -erp "Pick an entry by number to $2, or press ctrl-c to cancel. " number
+	chosen="$(ls -rc "$1" | nl | grep -w  "$number" | awk '{print $2}')"
+	basefile="$(basename "$chosen")" && base="${basefile%.*}" ;}
 
-	[ -z $url ] && echo "Error: Empty title!" && return 0;
-
-	grep "id='$url'" "$blogfile" &>/dev/null && lbdupnum=1 && while [ grep "$url" "$blogfile" ]; do lbdupnum=$((lbdupnum+1)); done
-	[ ! -z ${lbdupnum+x} ] && url="$url"-"$lbdupnum"
-	return 0
-	}
-
-postNew() { \
-	mkdir -p "$draftdir"
-	[ -f "$draftdir"/"$url"'.html' ] || \
-	echo -e "<h2 id='$url'>$title</h2>\n<small>[<a href=\"$blogfile#$url\">link</a>&mdash;<a href=\"blog/$url.html\">standalone</a>]</small>\n\n<++>" >> "$draftdir"/$url.html
-	$EDITOR "$draftdir"/$url.html
-}
-
-finalize() { \
-	url=$(grep -o "<h2 id='\(.\)*'>" "$draftdir"/"$chosen" | cut -d "'" -f2)
-	title=$(grep -o "<h2 id='\(.\)*h2>" "$draftdir"/"$chosen" | sed -E 's/<[^>]*>//g')
-	echo "AddDescription \"$title\" $chosen" >> "$blogdir"/.htaccess
-	rssdate=$(date '+%a, %d %b %Y %H:%M:%S %z')
-	webdate=$(date '+%a, %d %b %Y %H:%M:%S %z')
-	listformat='<li>'$(date '+%Y %b %d')' &ndash; <a href="blog/'$url'.html">'$title'</a></li>'
+publish() { \
+	delete
+	htaccessentry=$(grep "$basefile" "$webdir/blog/.htaccess")
+	realname="$(echo "$htaccessentry" | cut -d'"' -f2)"
+	rssdate="$(grep "$basefile" blog/.htaccess | sed "s/.*\.html\"* *#*//g" | tr -d '\n')"
+	[ -z "$rssdate" ] && rssdate="$(date '+%a, %d %b %Y %H:%M:%S %z')" # RSS date formats must comply with standards to validate.
+	webdate="$(date '+%a, %d %b %Y %H:%M:%S %z')" # But this visible date you can set to any format.
 	tmpdir=$(mktemp -d)
-	echo -e "\n<item>\n<title>$title</title>\n<guid>$website$blogfile#$url</guid>\n<pubDate>$rssdate</pubDate>\n<description><![CDATA[\n$(awk 'a==1;/^$/{a=1}' "$draftdir"/"$chosen")\n]]></description>\n</item>\n"> $tmpdir/rss.xml
-	echo -e "\n<div class=\"entry\">\n$(cat "$draftdir"/"$chosen")\n<small>$webdate</small>\n</div>\n" > $tmpdir/html.html
-	sed -i "/<!-- LB -->/r $tmpdir/html.html" $blogfile
-	sed -i "/<!-- LB -->/r $tmpdir/rss.xml" $rssfile
-	sed -i "/<!-- LB -->/a $listformat" $indexfile
-	header="<html>\n<head>\n<title>$title<\/title>\n<link rel='stylesheet' type='text\/css' href='$stylesheet'>\n<meta charset='utf-8'\/>\n<\/head>\n<body>"
-	footer="<\/body>\n<footer>by <strong>$author<\/strong><\/footer>\n<\/html>"
-	sed  "s/href=\"/href=\"..\//g;s/\.\.\/http/http/g;0,/^/s//$header/;0,/<h2 id=/s//<h1 id=/;0,/h2>/s//h1>/;\$a$footer" "$draftdir"/"$chosen" > "$blogdir"/"$chosen"
-	rm "$draftdir"/"$chosen"
+	printf "<html>\\n<head>\\n<title>%s</title>\\n<link rel='stylesheet' type='text/css' href='%s'>\\n<meta charset='utf-8'/>\\n</head>\\n<body>\\n<h1>%s</h1>\\n<small>[<a href='%s#%s'>link</a>&mdash;<a href='%s'>standalone</a>]</small>\\n%s\\n<footer>by <strong><a href='%s'>%s</a></strong></footer>\\n</body>\\n\\n</html>" "$realname" "$css" "$realname" "../$blogfile" "$base" "$basefile" "$(cat "$webdir/blog/.drafts/$basefile")" "$website" "$name" > "$webdir/blog/$basefile"
+	printf "\\n<item>\\n<title>%s</title>\\n<guid>%s%s#%s</guid>\\n<pubDate>%s</pubDate>\\n<description><![CDATA[\\n%s\\n]]></description>\\n</item>\\n\\n" "$realname" "$website" "$blogfile" "$basefile" "$rssdate" "$(cat "$webdir/blog/.drafts/$basefile")" >  "$tmpdir/rss"
+	printf "<div class='entry'>\\n<h2 id='%s'>%s</h2>\\n<small>[<a href='#%s'>link</a>&mdash;<a href='%s'>standalone</a>]</small>\\n%s\\n<small>%s</small>\\n</div>\\n" "$base" "$realname" "$base" "blog/$basefile" "$(cat "$webdir/blog/.drafts/$basefile")" "$webdate" > "$tmpdir/html"
+	printf "<li>%s &ndash; <a href=\"blog/%s\">%s</a></li>" "$(date '+%Y %b %d')" "$basefile" "$realname" > "$tmpdir/index"
+	sed -i "/<!-- LB -->/r $tmpdir/html" "$blogfile"
+	sed -i "/<!-- LB -->/r $tmpdir/rss" "$rssfile"
+	sed -i "/<!-- LB -->/r $tmpdir/index" "$indexfile"
+	sed -i "/ \"$basefile/d" "$webdir/blog/.htaccess"
+	printf "AddDescription \"%s\" \"%s\" #%s" "$realname" "$basefile" "$rssdate" >> "$webdir/blog/.htaccess"
+	rm -f "$webdir/blog/.drafts/$chosen"
 }
+
+confirm() { read -erp "Really $1 \"$base\"? (y/N) " choice && echo "$choice" | grep -i "^y$" >/dev/null || exit 1 ;}
 
 delete() { \
-	base=$(basename $(echo "$chosen" | cut -f1 -d'.'))
-	read -rp "Really delete \"$base\"? (y/N) " choice
-	[[ $choice =~ [Yy] ]] || exit
-	sed -i "/<item/{:a;N;/<\/item>/!ba};/#$base<\/guid/d" $rssfile && echo "Entry removed from RSS feed file."
-	sed -i "/<div/{:a;N;/<\/div>/!ba};/id='$base'/d" $blogfile && echo "HTML code removed from blogfile."
-	sed -i "/<li>.*<a href=\"blog\/$base.html\">/d" $indexfile && echo "Index file entry removed."
-	rm "$chosen" && echo "Blog post deleted from directories."
-	}
+	sed -i "/<item/{:a;N;/<\\/item>/!ba};/#$base.html<\\/guid/d" $rssfile
+	sed -i "/<div/{:a;N;/<\\/div>/!ba};/id='$base'/d" $blogfile
+	sed -i "/<li>.*<a href=\"blog\\/$base.html\">/d" $indexfile
+	rm "$webdir/blog/$basefile" 2>/dev/null && printf "Old blog entry removed.\\n" ;}
 
-discard() { \
-	base=$(echo "$chosen" | cut -f1 -d'.')
-	read -rp "Really discard \"$(basename $chosen)\"? (y/N) " choice
-	[[ $choice =~ [Yy] ]] || exit
-	rm "$chosen" && echo "Blog draft discarded."
-	}
+revise() { awk '/^<small>\[/{flag=1;next}/<footer>/{flag=0}flag' "$webdir/blog/$chosen" > "$webdir/blog/.drafts/$basefile"
+	"$EDITOR" "$webdir/blog/.drafts/$basefile"
+	printf "Revision stored in blog/.drafts. Publish as normal entry when desired.\\n" ;}
 
 case "$1" in
-	new) getTitle && postNew ;;
-	discard) listandReturn "$draftdir/*.html" discard && discard ;;
-	finalize) listandReturn "$draftdir" finalize && finalize ;;
-	delete) listandReturn "$blogdir/*.html" delete && delete ;;
-	edit) listandReturn "$draftdir/*.html" edit && $EDITOR "$chosen" ;;
-	*) getHelp ;;
+	n*) newpost ;;
+	e*) listandReturn "$webdir"/blog/.drafts/ edit && "$EDITOR" "$webdir/blog/.drafts/$chosen" ;;
+	p*) listandReturn "$webdir"/blog/.drafts/ publish && publish ;;
+	t*) listandReturn "$webdir"/blog/.drafts/ trash && confirm trash && rm "$webdir/blog/.drafts/$chosen" && printf "Draft deleted.\\n" ;;
+	d*) listandReturn "$webdir"/blog/ delete && confirm delete && delete ;;
+	r*) listandReturn "$webdir"/blog/ revise && revise ;;
+	*) printf "lb blog system by Luke Smith <luke@lukesmith.xyz>\\nUsage:\\n  ln n:\\tnew draft\\n  lb e:\\tedit draft\\n  lb p:\\tpublish/finalize draft\\n  lb r:\\trevise published entry\\n  lb t:\\tdiscard draft\\n  lb d:\\tdelete published entry\\n\\nBe sure to have the following pattern added to your RSS feed, blog file and blog index:\\n\\n<!-- LB -->\\n\\nNew content will be added directly below that sequence. This is required.\\nSee https://github.com/LukeSmithxyz/lb for more.\\n" ;;
 esac

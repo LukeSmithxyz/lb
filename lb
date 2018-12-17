@@ -60,6 +60,7 @@ delete() { \
 	sed -i "/<item/{:a;N;/<\\/item>/!ba};/#$base.html<\\/guid/d" $rssfile
 	sed -i "/<div/{:a;N;/<\\/div>/!ba};/id='$base'/d" $blogfile
 	sed -i "/<li>.*<a href=\"blog\\/$base.html\">/d" $indexfile
+	sed -i "\"$base.html\"" "$webdir/blog/.htaccess"
 	rm "$webdir/blog/$basefile" 2>/dev/null && printf "Old blog entry removed.\\n" ;}
 
 revise() { awk '/^<small>\[/{flag=1;next}/<footer>/{flag=0}flag' "$webdir/blog/$chosen" > "$webdir/blog/.drafts/$basefile"
@@ -70,7 +71,7 @@ case "$1" in
 	n*) newpost ;;
 	e*) listandReturn "$webdir"/blog/.drafts/ edit && "$EDITOR" "$webdir/blog/.drafts/$chosen" ;;
 	p*) listandReturn "$webdir"/blog/.drafts/ publish && publish ;;
-	t*) listandReturn "$webdir"/blog/.drafts/ trash && confirm trash && rm "$webdir/blog/.drafts/$chosen" && printf "Draft deleted.\\n" ;;
+	t*) listandReturn "$webdir"/blog/.drafts/ trash && confirm trash && rm -f "$webdir/blog/.drafts/$chosen" && sed -i "\"$base.html\"" "$webdir/blog/.htaccess" ; printf "Draft deleted.\\n" ;;
 	d*) listandReturn "$webdir"/blog/ delete && confirm delete && delete ;;
 	r*) listandReturn "$webdir"/blog/ revise && revise ;;
 	*) printf "lb blog system by Luke Smith <luke@lukesmith.xyz>\\nUsage:\\n  ln n:\\tnew draft\\n  lb e:\\tedit draft\\n  lb p:\\tpublish/finalize draft\\n  lb r:\\trevise published entry\\n  lb t:\\tdiscard draft\\n  lb d:\\tdelete published entry\\n\\nBe sure to have the following pattern added to your RSS feed, blog file and blog index:\\n\\n<!-- LB -->\\n\\nNew content will be added directly below that sequence. This is required.\\nSee https://github.com/LukeSmithxyz/lb for more.\\n" ;;

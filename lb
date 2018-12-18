@@ -49,7 +49,6 @@ publish() { \
 	sed -i "/<!-- LB -->/r $tmpdir/html" "$blogfile"
 	sed -i "/<!-- LB -->/r $tmpdir/rss" "$rssfile"
 	sed -i "/<!-- LB -->/r $tmpdir/index" "$indexfile"
-	sed -i "/ \"$basefile/d" "$webdir/blog/.htaccess"
 	printf "AddDescription \"%s\" \"%s\" #%s" "$realname" "$basefile" "$rssdate" >> "$webdir/blog/.htaccess"
 	rm -f "$webdir/blog/.drafts/$chosen"
 }
@@ -60,7 +59,6 @@ delete() { \
 	sed -i "/<item/{:a;N;/<\\/item>/!ba};/#$base.html<\\/guid/d" $rssfile
 	sed -i "/<div/{:a;N;/<\\/div>/!ba};/id='$base'/d" $blogfile
 	sed -i "/<li>.*<a href=\"blog\\/$base.html\">/d" $indexfile
-	sed -i "\"$base.html\"" "$webdir/blog/.htaccess"
 	rm "$webdir/blog/$basefile" 2>/dev/null && printf "Old blog entry removed.\\n" ;}
 
 revise() { awk '/^<small>\[/{flag=1;next}/<footer>/{flag=0}flag' "$webdir/blog/$chosen" > "$webdir/blog/.drafts/$basefile"

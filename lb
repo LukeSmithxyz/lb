@@ -49,6 +49,7 @@ publish() { \
 	sed -i "/<!-- LB -->/r $tmpdir/html" "$blogfile"
 	sed -i "/<!-- LB -->/r $tmpdir/rss" "$rssfile"
 	sed -i "/<!-- LB -->/r $tmpdir/index" "$indexfile"
+	sed -i "/ \"$base.html\"/d" "$webdir/blog/.htaccess"
 	printf "\\nAddDescription \"%s\" \"%s\" #%s" "$realname" "$basefile" "$rssdate" >> "$webdir/blog/.htaccess"
 	rm -f "$webdir/blog/.drafts/$chosen"
 }

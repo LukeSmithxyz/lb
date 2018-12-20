@@ -23,7 +23,7 @@ newpost() { read -erp "Give a title for your post:
 	" title
 	echo "$title" | grep "\"" >/dev/null && printf "Double quotation marks (\") are not allowed in entry titles.\\n" && exit
 	url="$(echo "$title" | tr -d '[:punct:]' | tr '[:upper:]' '[:lower:]' | tr ' ' '-')"
-	printf "\\nAddDescription \"$title\" \"$url.html\"" >> "$webdir/blog/.htaccess" || { echo "Error: Is htaccess writeable?"; exit; }
+	echo "AddDescription \"$title\" \"$url.html\"" >> "$webdir/blog/.htaccess" || { echo "Error: Is htaccess writeable?"; exit; }
 	[ -f "$webdir/blog/.drafts/$url.html" ] && echo "There is already an existing draft entry of that same name/URL." && exit
 	[ -f "$webdir/blog/$url.html" ] && echo "There is already an existing published entry of that same name/URL." && exit
 	$EDITOR "$webdir/blog/.drafts/$url.html" ;}
@@ -50,7 +50,7 @@ publish() { \
 	sed -i "/<!-- LB -->/r $tmpdir/rss" "$rssfile"
 	sed -i "/<!-- LB -->/r $tmpdir/index" "$indexfile"
 	sed -i "/ \"$base.html\"/d" "$webdir/blog/.htaccess"
-	printf "\\nAddDescription \"%s\" \"%s\" #%s" "$realname" "$basefile" "$rssdate" >> "$webdir/blog/.htaccess"
+	echo "AddDescription \"$realname\" \"$basefile\" #$rssdate" >> "$webdir/blog/.htaccess"
 	rm -f "$webdir/blog/.drafts/$chosen"
 }
 

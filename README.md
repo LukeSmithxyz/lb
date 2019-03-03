@@ -2,6 +2,8 @@
 
 Blogs and RSS feeds in less than 100 lines of shell script, actually, right now, less than 80.  `lb` stands for whatever. Maybe "Luke's blog", maybe "lightweight blog", maybe "less bloat", doesn't matter that much.
 
+[Video Showcase](https://www.youtube.com/watch?v=S1WQlr42xDM)
+
 ## Features
 
 `lb` is an extremely small shell script that lets you write blog posts and will format them in all the ways you could ever want. Here's what it will produce:

@@ -8,7 +8,7 @@ indexfile="blogindex.html"
 rssfile="rss.xml"
 [ -z "$EDITOR" ] && EDITOR="vim"
 
-[ ! -d blog/.drafts ] &&
+[ ! -d "$webdir/blog/.drafts" ] &&
 read -erp "Initialize blog in $webdir?" ask &&
 	if [ "$ask" = "y" ]; then
 	printf "Initializing blog system...\\n"

@@ -1,6 +1,6 @@
 #!/bin/bash
 name="Luke Smith"
-webdir="$(pwd)"
+webdir="$PWD"
 website="https://lukesmith.xyz/" # Keep a trailing slash.
 css="../style.css"
 blogfile="2019.html"

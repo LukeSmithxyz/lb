@@ -8,7 +8,7 @@ indexfile="blogindex.html"
 rssfile="rss.xml"
 [ -z "$EDITOR" ] && EDITOR="vim"
 
-[ ! -d blog/.drafts ] &&
+[ ! -d "$webdir/blog/.drafts" ] &&
 read -erp "Initialize blog in $webdir?" ask &&
 	if [ "$ask" = "y" ]; then
 	printf "Initializing blog system...\\n"
@@ -57,7 +57,7 @@ confirm() { read -erp "Really $1 \"$base\"? (y/N) " choice && echo "$choice" | g
 
 delete() { \
 	sed -i "/<item/{:a;N;/<\\/item>/!ba};/#$base.html<\\/guid/d" $rssfile
-	sed -i "/<div/{:a;N;/<\\/div>/!ba};/id='$base'/d" $blogfile
+	sed -i "/<div class='entry'>/{:a;N;/<\\/div>/!ba};/id='$base'/d" $blogfile
 	sed -i "/<li>.*<a href=\"blog\\/$base.html\">/d" $indexfile
 	rm "$webdir/blog/$basefile" 2>/dev/null && printf "Old blog entry removed.\\n" ;}
 

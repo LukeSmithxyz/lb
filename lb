@@ -56,7 +56,7 @@ publish() { \
 confirm() { read -erp "Really $1 \"$base\"? (y/N) " choice && echo "$choice" | grep -i "^y$" >/dev/null || exit 1 ;}
 
 delete() { \
-	sed -i "/<item/{:a;N;/<\\/item>/!ba};/#$base.html<\\/guid/d" $rssfile
+	sed -i "/<item/{:a;N;/<\\/item>/!ba};/#$base<\\/guid/d" $rssfile
 	sed -i "/<div class='entry'>/{:a;N;/<\\/div>/!ba};/id='$base'/d" $blogfile
 	sed -i "/<li>.*<a href=\"blog\\/$base.html\">/d" $indexfile
 	rm "$webdir/blog/$basefile" 2>/dev/null && printf "Old blog entry removed.\\n" ;}

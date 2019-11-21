@@ -12,7 +12,7 @@ Blogs and RSS feeds in less than 100 lines of shell script, actually, right now,
 - A list of all blog entries with dates: [Blog List File](https://lukesmith.xyz/blogindex.html).
 - All your blog posts appear as standalone entries/pages, for example [like this one](https://lukesmith.xyz/blog/the-real-bronze-age-mindset.html).
 - These standalone files exist in a `blog/` directory, which you can allow to be browsed manually via your Apache web server as I have [here](http://lukesmith.xyz/blog).
-- Blog posts are added, in full form, to an RSS feed of your chosing as well, see [my RSS feed](https://lukesmith.xyz/rss.xml).
+- Blog posts are added, in full form, to an RSS feed of your choosing as well, see [my RSS feed](https://lukesmith.xyz/rss.xml).
 - Posts in the rolling blog have divs that can easily be modified via a CSS stylesheet, and in general everything is easily editable.
 - One command to delete published entries from the RSS feed, rolling blog and standalone entries simultaneously.
 - Published blog entries can now be revised, updating the standalone blog pages, the RSS feed and everything else.

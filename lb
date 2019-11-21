@@ -44,6 +44,7 @@ newpost() {
 				{
 					gsub(/([:punct:]|^-|-$)/, "", $1)
 					gsub(/(\s|-\+)/, "-", $1)
+					gsub(/\//, "_", $1)
 					printf("%s\n", tolower($1))
 				}
 			' <<< "$(iconv -cf UTF-8 -t ASCII//TRANSLIT <<< "$title")"

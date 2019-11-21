@@ -35,7 +35,7 @@ fi
 
 newpost() {
 	read -ep "Give a title for your post: " title
-	if [[ "$title" == *\"* ]]; then
+	if [[ $title == *\"* ]]; then
 		FAIL 1 $LINENO 'Double quotation marks (") found in title.'
 	else
 		url() {
@@ -70,11 +70,27 @@ newpost() {
 }
 
 listandReturn() {
-	printf "Listing contents of %s.\n" "$1"
-	ls -rc "$1" | awk -F '/' '{print $NF}' | nl
-	read -erp "Pick an entry by number to $2, or press ctrl-c to cancel. " number
-	chosen="$(ls -rc "$1" | nl | grep -w  "$number" | awk '{print $2}')"
-	basefile="$(basename "$chosen")" && base="${basefile%.*}"
+	readarray ListArr <<< "$(ls -rc1 "$1")"
+	MaxNum=$[${#ListArr[@]} + 1]
+
+	printf "Listing contents of '%s'...\n" "$1"
+	declare -i Count=0
+	for Iter in "${ListArr[@]}"; {
+		printf "%6d  %s" $[Count + 1] "$Iter"
+		Count+=1
+	}
+
+	read -ep "Pick an entry to '$2', or 'Ctrl-C' to cancel: "
+	if [[ $REPLY =~ ^[0-9]+$ ]]; then
+		basefile=${ListArr[REPLY]##*/}
+		base=${basefile%.*}
+	elif [ "$REPLY" -lt 1 -o "$REPLY" -gt $MaxNum ]; then
+		FAIL 1 $LINENO "Invalid response -- out of range."
+	else
+		FAIL 1 $LINENO "Invalid response -- integer (1-$MaxNum) required."
+	fi
+
+	unset Iter ListArr MaxNum
 }
 
 publish() { \

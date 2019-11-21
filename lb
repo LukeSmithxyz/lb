@@ -1,82 +1,82 @@
 #!/bin/bash
-name="Luke Smith"
-webdir="$PWD"
-website="https://lukesmith.xyz/" # Keep a trailing slash.
-css="../style.css"
-blogfile="2019.html"
-indexfile="blogindex.html"
-rssfile="rss.xml"
-#post_postprocessor() { echo -e '%(body_pre_docinfo)s\n%(docinfo)s\n%(body)s'|rst2html5 --template=/dev/stdin --stylesheet='' "$1"; } # Defaults to: cat "$1"
-post_postprocessor() { cat "$1"; }
-#post_postprocessor_ext="rst"
-post_postprocessor_ext="html"
-[ -z "$EDITOR" ] && EDITOR="vim"
+# vim: set ts=2 sw=2 sts=2 et:
 
-[ ! -d "$webdir/blog/.drafts" ] &&
-read -erp "Initialize blog in $webdir?" ask &&
-	if [ "$ask" = "y" ]; then
-	printf "Initializing blog system...\\n"
-	mkdir -pv "$webdir/blog/.drafts" || printf "Error. Do you have write permissions in this directory?\\n"
-	echo "Options +Indexes" > "$webdir/blog/.htaccess"
-else
-	exit
+error() { echo "ERROR: $*"; exit 1; }
+confirm() { read -erp "$* [y/N]: " q; [ "$q" == "y" ] && return 0; return 1; }
+
+[ -z "$EDITOR" ] && EDITOR="vim"
+[ ! -f ./blog_config.sh ] && error "Configuration file 'blog_config.sh' not found in local directory."
+
+. ./blog_config.sh
+p_blog="$blog_dir/blog"
+p_posts="$p_blog/posts"
+p_drafts="$p_blog/.drafts"
+
+if [ ! -d "$p_drafts" ] && confirm "Initialize blog in $blog_dir?" || exit; then
+	echo "Initializing blog system..."
+	mkdir -pv "$p_drafts" && mkdir -pv "$p_posts"
+	echo "Options +Indexes" > "$p_posts/.htaccess"
 fi
 
-newpost() { read -erp "Give a title for your post:
-	" title
-	echo "$title" | grep "\"" >/dev/null && printf "Double quotation marks (\") are not allowed in entry titles.\\n" && exit
-	url="$(echo "$title" | iconv -cf UTF-8 -t ASCII//TRANSLIT | tr -d '[:punct:]' | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed "s/-\+/-/g;s/\(^-\|-\$\)//g")"
-	echo "AddDescription \"$title\" \"$url.html\"" >> "$webdir/blog/.htaccess" || { echo "Error: Is htaccess writeable?"; exit; }
-	[ -f "$webdir/blog/.drafts/$url.$post_postprocessor_ext" ] && echo "There is already an existing draft entry of that same name/URL." && exit
-	[ -f "$webdir/blog/$url.html" ] && echo "There is already an existing published entry of that same name/URL." && exit
-	$EDITOR "$webdir/blog/.drafts/$url.$post_postprocessor_ext" ;}
+post_new() {
+  read -erp "Give a title for your post: " title
+	echo "$title" | grep -q "\"" && error 'Double quotation marks (") are not allowed in entry titles.'
+	url=`echo "$title" | iconv -cf UTF-8 -t ASCII//TRANSLIT | tr -d '[:punct:]' | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed "s/-\+/-/g;s/\(^-\|-\$\)//g"`
+	[ -f "$p_drafts/$url.$post_processor_ext" ] && error "There is already an existing draft entry of that same name/URL."
+	[ -f "$p_blog/$url.html" ] && error "There is already an existing published entry of that same name/URL."
+	echo "AddDescription \"$title\" \"$url.html\"" >> "$p_posts/.htaccess" || error "Could not write to .htaccess file."
+	$EDITOR "$p_drafts/$url.$post_processor_ext" ;}
 
-listandReturn() { printf "Listing contents of %s.\\n" "$1"
-	ls -rc "$1" | awk -F '/' '{print $NF}' | nl
-	read -erp "Pick an entry by number to $2, or press ctrl-c to cancel. " number
-	chosen="$(ls -rc "$1" | nl | grep -w  "$number" | awk '{print $2}')"
-	basefile="$(basename "$chosen")" && base="${basefile%.*}" ;}
+post_select() {
+  filter="$2"; [ -z "$filter" ] && filter='^$'
+  echo "Listing contents of $1"
+	ls -rc "$1" | awk -F '/' '{print $NF}' | grep -Ev "$filter" | nl
+	read -erp "Please, select a post by number or press ctrl-c to cancel: " number
+	chosen=`ls -rc "$1" | nl | grep -w "$number" | awk '{print $2}'`
+	basefile=`basename "$chosen"` && base="${basefile%.*}" ;}
 
-publish() { \
-	delete
-	htaccessentry=$(grep "$base.html" "$webdir/blog/.htaccess")
-	realname="$(echo "$htaccessentry" | cut -d'"' -f2)"
-	rssdate="$(grep "$base.html" blog/.htaccess | sed "s/.*\.html\"* *#*//g" | tr -d '\n')"
-	[ -z "$rssdate" ] && rssdate="$(LC_TIME=en_US date '+%a, %d %b %Y %H:%M:%S %z')" # RSS date formats must comply with standards to validate.
-	webdate="$(date '+%a, %d %b %Y %H:%M:%S %z')" # But this visible date you can set to any format.
-	tmpdir=$(mktemp -d)
-	printf "<html>\\n<head>\\n<title>%s</title>\\n<link rel='stylesheet' type='text/css' href='%s'>\\n<meta charset='utf-8'/>\\n</head>\\n<body>\\n<h1>%s</h1>\\n<small>[<a href='%s#%s'>link</a>&mdash;<a href='%s'>standalone</a>]</small>\\n%s\\n<footer>by <strong><a href='%s'>%s</a></strong></footer>\\n</body>\\n\\n</html>" "$realname" "$css" "$realname" "../$blogfile" "$base" "$base.html" "$(post_postprocessor "$webdir/blog/.drafts/$base.$post_postprocessor_ext")" "$website" "$name" > "$webdir/blog/$base.html"
-	printf "\\n<item>\\n<title>%s</title>\\n<guid>%s%s#%s</guid>\\n<pubDate>%s</pubDate>\\n<description><![CDATA[\\n%s\\n]]></description>\\n</item>\\n\\n" "$realname" "$website" "$blogfile" "$base" "$rssdate" "$(post_postprocessor "$webdir/blog/.drafts/$base.$post_postprocessor_ext")" >  "$tmpdir/rss"
-	printf "<div class='entry'>\\n<h2 id='%s'>%s</h2>\\n<small>[<a href='#%s'>link</a>&mdash;<a href='%s'>standalone</a>]</small>\\n%s\\n<small>%s</small>\\n</div>\\n" "$base" "$realname" "$base" "blog/$base.html" "$(post_postprocessor "$webdir/blog/.drafts/$base.$post_postprocessor_ext")" "$webdate" > "$tmpdir/html"
-	printf "<li>%s &ndash; <a href=\"blog/%s\">%s</a></li>\\n" "$(date '+%Y %b %d')" "$base.html" "$realname" > "$tmpdir/index"
-	sed -i "/<!-- LB -->/r $tmpdir/html" "$blogfile"
-	sed -i "/<!-- LB -->/r $tmpdir/rss" "$rssfile"
-	sed -i "/<!-- LB -->/r $tmpdir/index" "$indexfile"
-	sed -i "/ \"$base.html\"/d" "$webdir/blog/.htaccess"
-	echo "AddDescription \"$realname\" \"$base.html\" #$rssdate" >> "$webdir/blog/.htaccess"
-        [ -f  "$webdir/blog/$base.$post_postprocessor_ext" ] || mv "$webdir/blog/.drafts/$chosen" "$webdir/blog/$base.$post_postprocessor_ext"
-	rm -f "$webdir/blog/.drafts/$chosen"
-}
+post_delete() {
+	sed -i "/<item/{:a;N;/<\\/item>/!ba};/#$base<\\/guid/d" "$p_blog/$path_rss"
+	sed -i "/<div class='entry'>/{:a;N;/<\\/div>/!ba};/id='$base'/d" "$p_blog/$path_blogfile"
+	sed -i "/<li>.*<a href=\"posts\\/$base.html\">/d" "$p_blog/$path_blogindex"
+	rm -f "$p_posts/$base".* && echo "Blog post removed." ;}
 
-confirm() { read -erp "Really $1 \"$base\"? (y/N) " choice && echo "$choice" | grep -i "^y$" >/dev/null || exit 1 ;}
+post_publish() {
+	post_delete
+	htaccessentry=`grep "$base.html" "$p_posts/.htaccess"`
+	title=`echo "$htaccessentry" | cut -d'"' -f2`
+	rssdate=`grep "$base.html" blog/.htaccess | sed "s/.*\.html\"* *#*//g" | tr -d '\n'`
+	[ -z "$rssdate" ] && rssdate=`LC_ALL=en_US date '+%a, %d %b %Y %H:%M:%S %z'` # RSS date formats must comply with standards to validate.
+	webdate=`date "$blog_dateformat"` # But this visible date you can set to any format.
+  post_html=`post_processor "$p_drafts/$base.$post_processor_ext"`
+	tmpdir=`mktemp -d`
+	echo "<html><head><title>$title</title><link rel='stylesheet' type='text/css' href='$path_css'><meta charset='utf-8'/></head><body><h1>$title</h1><small>[<a href='$path_blogfile#$base'>link</a>&mdash;<a href='posts/$base.html'>standalone</a>]</small>$post_html<footer>by <strong><a href='$blog_site'>$author</a></strong></footer></body></html>" > "$p_posts/$base.html"
+	echo "<item><title>$title</title><guid>$blog_site/$path_blogfile#$base</guid><pubDate>$rssdate</pubDate><description><![CDATA[$post_html]]></description></item>" > "$tmpdir/rss"
+	echo "<div class='entry'><h2 id='$base'>$title</h2><small>[<a href='#$base'>link</a>&mdash;<a href='posts/$base.html'>standalone</a>]</small>$post_html<small>$webdate</small></div>" > "$tmpdir/html"
+	echo "<li>`date '+%Y %b %d'` &ndash; <a href='posts/$base.html'>$title</a></li>" > "$tmpdir/index"
+	sed -i "/<!-- LB -->/r $tmpdir/html" "$p_blog/$path_blogfile"
+	sed -i "/<!-- LB -->/r $tmpdir/rss" "$p_blog/$path_rss"
+	sed -i "/<!-- LB -->/r $tmpdir/index" "$p_blog/$path_blogindex"
+	sed -i "/ \"$base.html\"/d" "$p_posts/.htaccess"
+	echo "AddDescription \"$title\" \"$base.html\" #$rssdate" >> "$p_posts/.htaccess" ;}
 
-delete() { \
-	sed -i "/<item/{:a;N;/<\\/item>/!ba};/#$base<\\/guid/d" $rssfile
-	sed -i "/<div class='entry'>/{:a;N;/<\\/div>/!ba};/id='$base'/d" $blogfile
-	sed -i "/<li>.*<a href=\"blog\\/$base.html\">/d" $indexfile
-	rm -f "$webdir/blog/$base".* && printf "Old blog entry removed.\\n" ;}
-
-revise() { cp "$webdir/blog/$base.$post_postprocessor_ext" "$webdir/blog/.drafts/$base.$post_postprocessor_ext"
-        [ "$post_postprocessor_ext" == "html" ] && awk '/^<small>\[/{flag=1;next}/<footer>/{flag=0}flag' "$webdir/blog/$base.html" > "$webdir/blog/.drafts/$base.html"
-	"$EDITOR" "$webdir/blog/.drafts/$base.$post_postprocessor_ext"
-	printf "Revision stored in blog/.drafts. Publish as normal entry when desired.\\n" ;}
+post_edit() {
+	"$EDITOR" "$p_drafts/$base.$post_postprocessor_ext"
+	echo "Revision stored in $p_drafts. Publish as normal entry when desired." ;}
 
 case "$1" in
-	n*) newpost ;;
-	e*) listandReturn "$webdir"/blog/.drafts/ edit && "$EDITOR" "$webdir/blog/.drafts/$chosen" ;;
-	p*) listandReturn "$webdir"/blog/.drafts/ publish && publish ;;
-	t*) listandReturn "$webdir"/blog/.drafts/ trash && confirm trash && rm -f "$webdir/blog/.drafts/$chosen" && sed -i "/ \"$base.html\"/d" "$webdir/blog/.htaccess" ; printf "Draft deleted.\\n" ;;
-	d*) listandReturn "$webdir"/blog/ delete && confirm delete && delete && sed -i "/ \"$base.html\"/d" "$webdir/blog/.htaccess" ;;
-	r*) listandReturn "$webdir"/blog/ revise && revise ;;
-	*) printf "lb blog system by Luke Smith <luke@lukesmith.xyz>\\nUsage:\\n  lb n:\\tnew draft\\n  lb e:\\tedit draft\\n  lb p:\\tpublish/finalize draft\\n  lb r:\\trevise published entry\\n  lb t:\\tdiscard draft\\n  lb d:\\tdelete published entry\\n\\nBe sure to have the following pattern added to your RSS feed, blog file and blog index:\\n\\n<!-- LB -->\\n\\nNew content will be added directly below that sequence. This is required.\\nSee https://github.com/LukeSmithxyz/lb for more.\\n" ;;
+	n*) post_new;;
+	e*) post_select "$p_drafts" && post_edit ;;
+	p*) post_select "$p_drafts" && post_publish ;;
+	t*) post_select "$p_drafts" && confirm "Are you sure you want to delete the draft $chosen ?" && rm -f "$p_drafts/$chosen" && sed -i "/ \"$base.html\"/d" "$p_posts/.htaccess" && echo "Draft deleted." ;;
+	d*) post_select "$p_posts"  && confirm "Are you sure you want to delete the post $chosen ?" && post_delete && sed -i "/ \"$base.html\"/d" "$p_posts/.htaccess" ;;
+	*)
+    echo "lb blog system by Luke Smith <luke@lukesmith.xyz>"
+    echo "  Usage:"
+    echo "    lb n:   new draft"
+    echo "    lb e:   edit draft"
+    echo "    lb p:   publish draft"
+    echo "    lb t:   discard draft"
+    echo "    lb d:   delete published post"
+    echo -e "\n Be sure to have the following pattern added to your RSS feed, blog file and blog index:\n\n<!-- LB -->\n\nNew content will be added directly below that sequence. This is required.\nSee https://github.com/LukeSmithxyz/lb for more.\n" ;;
 esac

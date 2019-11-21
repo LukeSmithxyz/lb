@@ -1,3 +1,5 @@
 #exclude blog
-/blog
-!/blog/this-is-what-a-post-looks-like.html
+/blog/posts
+/blog/.drafts
+/blog/*.html
+/blog/*.xml

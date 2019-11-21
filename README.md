@@ -22,12 +22,12 @@ Blogs and RSS feeds in less than 100 lines of shell script, actually, right now,
 `lb` commands are all one letter cause I'm lazy. They all stand for something though.
 
 ```sh
-./lb n(ew)	# Make a new blog post draft.
-./lb e(edit)	# Edit a draft of an entry.
-./lb t(rash)	# Delete a draft of an entry.
-./lb p(ublish)	# Finalize/publish a blog post draft.
-./lb d(elete)	# Delete a published blog post.
-./lb r(evise)	# Revise an already published entry (you can republish it with `lb p` when done)
+./lb n(ew)      # Make a new blog post draft.
+./lb e(dit)     # Edit a draft of an entry.
+./lb t(rash)    # Delete a draft of an entry.
+./lb p(ublish)  # Finalize/publish a blog post draft.
+./lb d(elete)   # Delete a published blog post.
+./lb r(evise)   # Revise an already published entry (you can republish it with `lb p` when done)
 ```
 
 ## Installation

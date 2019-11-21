@@ -22,7 +22,7 @@ fi
 post_new() {
   read -erp "Give a title for your post: " title
 	echo "$title" | grep -q "\"" && error 'Double quotation marks (") are not allowed in entry titles.'
-	url=`echo "$title" | iconv -cf UTF-8 -t ASCII//TRANSLIT | tr -d '[:punct:]' | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed "s/-\+/-/g;s/\(^-\|-\$\)//g"`
+	url=`echo "$title" | iconv -cf UTF-8 -t ASCII//TRANSLIT | tr -d '[:punct:]' | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr '/' '_' | sed "s/-\+/-/g;s/\(^-\|-\$\)//g"`
 	[ -f "$p_drafts/$url.$post_processor_ext" ] && error "There is already an existing draft entry of that same name/URL."
 	[ -f "$p_blog/$url.html" ] && error "There is already an existing published entry of that same name/URL."
 	echo "AddDescription \"$title\" \"$url.html\"" >> "$p_posts/.htaccess" || error "Could not write to .htaccess file."

@@ -11,10 +11,11 @@ confirm() { read -erp "$* [y/N]: " q; [ "$q" == "y" ] && return 0; return 1; }
 p_blog="$blog_dir/blog"
 p_posts="$p_blog/posts"
 p_drafts="$p_blog/.drafts"
+p_sources="$p_blog/.sources" # Saved sources for publised posts
 
-if [ ! -d "$p_drafts" ] && confirm "Initialize blog in $blog_dir?" || exit; then
+if [ ! -d "$p_drafts" ] && (confirm "Initialize blog in $blog_dir?" || exit); then
 	echo "Initializing blog system..."
-	mkdir -pv "$p_drafts" && mkdir -pv "$p_posts"
+	mkdir -pv "$p_blog"{posts,.drafts,.sources}
 	echo "Options +Indexes" > "$p_posts/.htaccess"
 fi
 
@@ -33,21 +34,22 @@ post_select() {
 	ls -rc "$1" | awk -F '/' '{print $NF}' | grep -Ev "$filter" | nl
 	read -erp "Please, select a post by number or press ctrl-c to cancel: " number
 	chosen=`ls -rc "$1" | nl | grep -w "$number" | awk '{print $2}'`
+  [ -z "$chosen" ] && exit
 	basefile=`basename "$chosen"` && base="${basefile%.*}" ;}
 
 post_delete() {
 	sed -i "/<item/{:a;N;/<\\/item>/!ba};/#$base<\\/guid/d" "$p_blog/$path_rss"
 	sed -i "/<div class='entry'>/{:a;N;/<\\/div>/!ba};/id='$base'/d" "$p_blog/$path_blogfile"
-	sed -i "/<li>.*<a href=\"posts\\/$base.html\">/d" "$p_blog/$path_blogindex"
-	rm -f "$p_posts/$base".* && echo "Blog post removed." ;}
+	sed -i "/<li>.*<a href='posts\\/$base.html'>/d" "$p_blog/$path_blogindex"
+	rm -f "$p_posts/$base".* "$p_sources/$base".* && echo "Blog post removed." ;}
 
 post_publish() {
 	post_delete
 	htaccessentry=`grep "$base.html" "$p_posts/.htaccess"`
 	title=`echo "$htaccessentry" | cut -d'"' -f2`
-	rssdate=`grep "$base.html" blog/.htaccess | sed "s/.*\.html\"* *#*//g" | tr -d '\n'`
+	rssdate=`grep "$base.html" "$p_posts/.htaccess" | sed "s/.*\.html\"* *#*//g" | tr -d '\n'`
 	[ -z "$rssdate" ] && rssdate=`LC_ALL=en_US date '+%a, %d %b %Y %H:%M:%S %z'` # RSS date formats must comply with standards to validate.
-	webdate=`date "$blog_dateformat"` # But this visible date you can set to any format.
+	webdate=`LC_ALL=en_US date "$blog_dateformat"` # But this visible date you can set to any format.
   post_html=`post_processor "$p_drafts/$base.$post_processor_ext"`
 	tmpdir=`mktemp -d`
 	echo "<html><head><title>$title</title><link rel='stylesheet' type='text/css' href='$path_css'><meta charset='utf-8'/></head><body><h1>$title</h1><small>[<a href='$path_blogfile#$base'>link</a>&mdash;<a href='posts/$base.html'>standalone</a>]</small>$post_html<footer>by <strong><a href='$blog_site'>$author</a></strong></footer></body></html>" > "$p_posts/$base.html"
@@ -58,18 +60,22 @@ post_publish() {
 	sed -i "/<!-- LB -->/r $tmpdir/rss" "$p_blog/$path_rss"
 	sed -i "/<!-- LB -->/r $tmpdir/index" "$p_blog/$path_blogindex"
 	sed -i "/ \"$base.html\"/d" "$p_posts/.htaccess"
-	echo "AddDescription \"$title\" \"$base.html\" #$rssdate" >> "$p_posts/.htaccess" ;}
+	echo "AddDescription \"$title\" \"$base.html\" #$rssdate" >> "$p_posts/.htaccess"
+  mv "$p_drafts/$base.$post_processor_ext" "$p_sources" ;}
 
 post_edit() {
-	"$EDITOR" "$p_drafts/$base.$post_postprocessor_ext"
+	post_file="$base.$post_processor_ext"
+  [ -f "$p_drafts/$post_file" ] || cp "$p_sources/$post_file" "$p_drafts"
+	"$EDITOR" "$p_drafts/$post_file"
 	echo "Revision stored in $p_drafts. Publish as normal entry when desired." ;}
 
 case "$1" in
-	n*) post_new;;
+	n*) post_new ;;
 	e*) post_select "$p_drafts" && post_edit ;;
 	p*) post_select "$p_drafts" && post_publish ;;
 	t*) post_select "$p_drafts" && confirm "Are you sure you want to delete the draft $chosen ?" && rm -f "$p_drafts/$chosen" && sed -i "/ \"$base.html\"/d" "$p_posts/.htaccess" && echo "Draft deleted." ;;
 	d*) post_select "$p_posts"  && confirm "Are you sure you want to delete the post $chosen ?" && post_delete && sed -i "/ \"$base.html\"/d" "$p_posts/.htaccess" ;;
+  r*) post_select "$p_posts" && post_edit ;;
 	*)
     echo "lb blog system by Luke Smith <luke@lukesmith.xyz>"
     echo "  Usage:"
@@ -77,6 +83,7 @@ case "$1" in
     echo "    lb e:   edit draft"
     echo "    lb p:   publish draft"
     echo "    lb t:   discard draft"
+    echo "    lb r:   revise/edit published post"
     echo "    lb d:   delete published post"
     echo -e "\n Be sure to have the following pattern added to your RSS feed, blog file and blog index:\n\n<!-- LB -->\n\nNew content will be added directly below that sequence. This is required.\nSee https://github.com/LukeSmithxyz/lb for more.\n" ;;
 esac

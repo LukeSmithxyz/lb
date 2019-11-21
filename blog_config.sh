@@ -1,5 +1,6 @@
 # vim: set ts=2 sw=2 sts=2 et:
 author="Luke Smith"
+author_web="https://lukesmith.xyz"
 
 # blog variables
 blog_dir="$PWD"

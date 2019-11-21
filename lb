@@ -52,7 +52,7 @@ post_publish() {
 	webdate=`LC_ALL=en_US date "$blog_dateformat"` # But this visible date you can set to any format.
   post_html=`post_processor "$p_drafts/$base.$post_processor_ext"`
 	tmpdir=`mktemp -d`
-	echo "<html><head><title>$title</title><link rel='stylesheet' type='text/css' href='../$path_css'><meta charset='utf-8'/></head><body class='entry'><div id='topbar'></div><h2 class='ptitle'>$title</h2><small>[<a href='../$path_blogfile#$base'>link</a>&mdash;<a href='$base.html'>standalone</a>]</small>$post_html<footer>by <strong><a href='$blog_site'>$author</a></strong></footer></body></html>" > "$p_posts/$base.html"
+	echo "<html><head><title>$title</title><link rel='stylesheet' type='text/css' href='../$path_css'><meta charset='utf-8'/></head><body class='entry'><div id='topbar'></div><h2 class='ptitle'>$title</h2><small>[<a href='../$path_blogfile#$base'>link</a>&mdash;<a href='$base.html'>standalone</a>]</small>$post_html<footer>by <strong><a href='$author_web'>$author</a></strong></footer></body></html>" > "$p_posts/$base.html"
 	echo "<item><title>$title</title><guid>$blog_site/$path_blogfile#$base</guid><pubDate>$rssdate</pubDate><description><![CDATA[$post_html]]></description></item>" > "$tmpdir/rss"
 	echo "<div class='entry'><h2 id='$base'>$title</h2><small>[<a href='#$base'>link</a>&mdash;<a href='posts/$base.html'>standalone</a>]</small>$post_html<small class='pdate'>$webdate</small></div>" > "$tmpdir/html"
 	echo "<li>`date '+%Y %b %d'` &ndash; <a href='posts/$base.html'>$title</a></li>" > "$tmpdir/index"

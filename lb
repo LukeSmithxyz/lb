@@ -22,7 +22,7 @@ if [ ! -d "$webdir/blog/.drafts" ]; then
 
 			Drafts="$webdir/blog/.drafts"
 			if [ -w "${Drafts%/*}" ]; then
-				mkdir -pv "$webdir/blog/.drafts"; then
+				mkdir -pv "$webdir/blog/.drafts"
 			else
 				FAIL 1 $LINENO "Write access required for directory creation."
 			fi

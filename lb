@@ -8,30 +8,74 @@ indexfile="blogindex.html"
 rssfile="rss.xml"
 [ -z "$EDITOR" ] && EDITOR="vim"
 
-[ ! -d "$webdir/blog/.drafts" ] &&
-read -erp "Initialize blog in $webdir?" ask &&
-	if [ "$ask" = "y" ]; then
-	printf "Initializing blog system...\\n"
-	mkdir -pv "$webdir/blog/.drafts" || printf "Error. Do you have write permissions in this directory?\\n"
-	echo "Options +Indexes" > "$webdir/blog/.htaccess"
-else
-	exit
+FAIL(){
+	printf "[L%0.4d] ERROR: %s\n" "$2" "$3" 1>&2
+	[ $1 -eq 1 ] && exit 1
+}
+
+if [ ! -d "$webdir/blog/.drafts" ]; then
+	read -e -n 1 -p "Initialize blog in $webdir?" ask
+
+	case $ask in
+		[Yy])
+			printf "Initializing blog system...\\n"
+
+			Drafts="$webdir/blog/.drafts"
+			if [ -w "${Drafts%/*}" ]; then
+				mkdir -pv "$webdir/blog/.drafts"; then
+			else
+				FAIL 1 $LINENO "Write access required for directory creation."
+			fi
+
+			echo "Options +Indexes" > "$webdir/blog/.htaccess" ;;
+		*)
+			exit ;;
+	esac
 fi
 
-newpost() { read -erp "Give a title for your post:
-	" title
-	echo "$title" | grep "\"" >/dev/null && printf "Double quotation marks (\") are not allowed in entry titles.\\n" && exit
-	url="$(echo "$title" | iconv -cf UTF-8 -t ASCII//TRANSLIT | tr -d '[:punct:]' | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed "s/-\+/-/g;s/\(^-\|-\$\)//g")"
-	echo "AddDescription \"$title\" \"$url.html\"" >> "$webdir/blog/.htaccess" || { echo "Error: Is htaccess writeable?"; exit; }
-	[ -f "$webdir/blog/.drafts/$url.html" ] && echo "There is already an existing draft entry of that same name/URL." && exit
-	[ -f "$webdir/blog/$url.html" ] && echo "There is already an existing published entry of that same name/URL." && exit
-	$EDITOR "$webdir/blog/.drafts/$url.html" ;}
+newpost() {
+	read -ep "Give a title for your post: " title
+	if [[ "$title" == *\"* ]]; then
+		FAIL 1 $LINENO 'Double quotation marks (") found in title.'
+	else
+		url() {
+			awk -F '\0' '
+				{
+					gsub(/([:punct:]|^-|-$)/, "", $1)
+					gsub(/(\s|-\+)/, "-", $1)
+					printf("%s\n", tolower($1))
+				}
+			' <<< "$(iconv -cf UTF-8 -t ASCII//TRANSLIT <<< "$title")"
+		}
 
-listandReturn() { printf "Listing contents of %s.\\n" "$1"
+		local HTAccess="$webdir/blog/.htaccess"
+		if [ -f "$HTAccess" ] && [ -r "$HTAccess" ]; then
+			printf "AddDescription \"%s\" \"%s.html\"\n" "$title" "$(url)" >> "$HTAccess"
+		else
+			FAIL 1 $LINENO "File '.htaccess' missing or unreadable."
+		fi
+
+		if [ -f "$webdir/blog/.drafts/$url.html" ]; then
+			FAIL 1 $LINENO "Pre-existing draft entry of the same name/URL."
+		elif [ -f "$webdir/blog/$url.html" ]; then
+			FAIL 1 $LINENO "Pre-existing published entry of the same name/URL."
+		fi
+
+		$EDITOR "$webdir/blog/.drafts/$url.html"
+
+		unset -f url
+	fi
+
+	unset title
+}
+
+listandReturn() {
+	printf "Listing contents of %s.\n" "$1"
 	ls -rc "$1" | awk -F '/' '{print $NF}' | nl
 	read -erp "Pick an entry by number to $2, or press ctrl-c to cancel. " number
 	chosen="$(ls -rc "$1" | nl | grep -w  "$number" | awk '{print $2}')"
-	basefile="$(basename "$chosen")" && base="${basefile%.*}" ;}
+	basefile="$(basename "$chosen")" && base="${basefile%.*}"
+}
 
 publish() { \
 	delete

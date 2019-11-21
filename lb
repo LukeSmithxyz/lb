@@ -81,6 +81,8 @@ listandReturn() {
 		Count+=1
 	}
 
+	[ $MaxNum -eq 0 ] && FAIL 1 $LINENO "There's nothing to $2."
+
 	read -ep "Pick an entry to '$2', or 'Ctrl-C' to cancel: "
 	if [[ $REPLY =~ ^[0-9]+$ ]]; then
 		chosen=${ListArr[REPLY - 1]}

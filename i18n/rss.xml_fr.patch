@@ -1,0 +1,23 @@
+--- rss.xml.orig	2019-12-22 14:23:55.868328786 +0100
++++ rss.xml	2019-12-22 15:15:21.036918912 +0100
+@@ -3,16 +3,16 @@
+ <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+ 
+ <channel>
+-<title>Your RSS Feed Title</title>
+-<description>A brief description of your RSS feed.</description>
+-<language>en-us</language>
++<title>Titre de votre Flux RSS</title>
++<description>Une brève description de votre flux RSS.</description>
++<language>fr-fr</language>
+ <link>http://yourwebsite.com/rss.xml</link>
+ <atom:link href="http://yourwebsite.com/rss.xml" rel="self" type="application/rss+xml" />
+ 
+ <!-- LB -->
+ 
+ <item>
+-<title>This is what a post looks like</title>
++<title>C'est ce à quoi ressemble un billet/post</title>
+ <guid>https://lukesmith.xyz/2018.html#this-is-what-a-post-looks-like</guid>
+ <pubDate>Wed, 16 May 2018 14:38:38 -0700</pubDate>
+ <description><![CDATA[

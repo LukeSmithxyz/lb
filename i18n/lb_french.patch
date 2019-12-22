@@ -1,0 +1,99 @@
+--- lb.orig	2019-12-22 14:45:29.152982516 +0100
++++ lb	2019-12-22 14:49:44.912369966 +0100
+@@ -1,7 +1,8 @@
+ #!/bin/bash
+-name="Luke Smith"
+-webdir="$PWD"
+-website="https://lukesmith.xyz/" # Keep a trailing slash.
++webdir=$PWD
++name="Jean Dupont"
++# Changez le nom ci-dessu et le nom de domaine à votre convenance
++website="https://nomdedomai.ne/" # Gardez le slash à la fin 
+ css="../style.css"
+ blogfile="2019.html"
+ indexfile="blogindex.html"
+@@ -9,27 +10,27 @@
+ [ -z "$EDITOR" ] && EDITOR="vim"
+ 
+ [ ! -d "$webdir/blog/.drafts" ] &&
+-read -erp "Initialize blog in $webdir?" ask &&
++read -erp "Initialiser le blog dans $webdir ?" ask &&
+ 	if [ "$ask" = "y" ]; then
+-	printf "Initializing blog system...\\n"
+-	mkdir -pv "$webdir/blog/.drafts" || printf "Error. Do you have write permissions in this directory?\\n"
++	printf "Initialisation du système de blog..\\n"
++	mkdir -pv "$webdir/blog/.drafts" || printf "Erreur. Vous n'avez peut-être pas des droits suffisants?\\n"
+ 	echo "Options +Indexes" > "$webdir/blog/.htaccess"
+ else
+ 	exit
+ fi
+ 
+-newpost() { read -erp "Give a title for your post:
++newpost() { read -erp "Donne un titre à ton post:
+ 	" title
+-	echo "$title" | grep "\"" >/dev/null && printf "Double quotation marks (\") are not allowed in entry titles.\\n" && exit
++	echo "$title" | grep "\"" >/dev/null && printf "Les guillemets (\") ne sont pas autorisés dans les titres de post.\\n" && exit
+ 	url="$(echo "$title" | iconv -cf UTF-8 -t ASCII//TRANSLIT | tr -d '[:punct:]' | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed "s/-\+/-/g;s/\(^-\|-\$\)//g")"
+-	echo "AddDescription \"$title\" \"$url.html\"" >> "$webdir/blog/.htaccess" || { echo "Error: Is htaccess writeable?"; exit; }
+-	[ -f "$webdir/blog/.drafts/$url.html" ] && echo "There is already an existing draft entry of that same name/URL." && exit
+-	[ -f "$webdir/blog/$url.html" ] && echo "There is already an existing published entry of that same name/URL." && exit
++	echo "AddDescription \"$title\" \"$url.html\"" >> "$webdir/blog/.htaccess" || { echo "Erreur: .htaccess est-il accessible en écriture ?"; exit; }
++	[ -f "$webdir/blog/.drafts/$url.html" ] && echo "Il y a déjà un brouillon ou post avec la même url ou titre." && exit
++	[ -f "$webdir/blog/$url.html" ] && echo "Il y a déjà un post avec le même nom ou url." && exit
+ 	$EDITOR "$webdir/blog/.drafts/$url.html" ;}
+ 
+-listandReturn() { printf "Listing contents of %s.\\n" "$1"
++listandReturn() { printf "Contenu de  %s.\\n" "$1"
+ 	ls -rc "$1" | awk -F '/' '{print $NF}' | nl
+-	read -erp "Pick an entry by number to $2, or press ctrl-c to cancel. " number
++	read -erp "Choisissez une option par son numéro pour  $2, ou pressez Ctrl+c pour annuler. " number
+ 	chosen="$(ls -rc "$1" | nl | grep -w  "$number" | awk '{print $2}')"
+ 	basefile="$(basename "$chosen")" && base="${basefile%.*}" ;}
+ 
+@@ -38,12 +39,12 @@
+ 	htaccessentry=$(grep "$basefile" "$webdir/blog/.htaccess")
+ 	realname="$(echo "$htaccessentry" | cut -d'"' -f2)"
+ 	rssdate="$(grep "$basefile" blog/.htaccess | sed "s/.*\.html\"* *#*//g" | tr -d '\n')"
+-	[ -z "$rssdate" ] && rssdate="$(LC_TIME=en_US date '+%a, %d %b %Y %H:%M:%S %z')" # RSS date formats must comply with standards to validate.
+-	webdate="$(date '+%a, %d %b %Y %H:%M:%S %z')" # But this visible date you can set to any format.
++	[ -z "$rssdate" ] && rssdate="$(LC_TIME=fr_FR date '+%a, %d %b %Y %H:%M:%S %z')" # RSS date formats must comply with standards to validate. Les formats des dates RSS doivent se plier aux standards être validée.
++	webdate="$(date '+%a, %d %b %Y %H:%M:%S %z')" # Mais vous pouvez mettre cette date visible sous n'importe quel format. 
+ 	tmpdir=$(mktemp -d)
+-	printf "<html>\\n<head>\\n<title>%s</title>\\n<link rel='stylesheet' type='text/css' href='%s'>\\n<meta charset='utf-8'/>\\n</head>\\n<body>\\n<h1>%s</h1>\\n<small>[<a href='%s#%s'>link</a>&mdash;<a href='%s'>standalone</a>]</small>\\n%s\\n<footer>by <strong><a href='%s'>%s</a></strong></footer>\\n</body>\\n\\n</html>" "$realname" "$css" "$realname" "../$blogfile" "$base" "$basefile" "$(cat "$webdir/blog/.drafts/$basefile")" "$website" "$name" > "$webdir/blog/$basefile"
++	printf "<html>\\n<head>\\n<title>%s</title>\\n<link rel='stylesheet' type='text/css' href='%s'>\\n<meta charset='utf-8'/>\\n</head>\\n<body>\\n<h1>%s</h1>\\n<small>[<a href='%s#%s'>link</a>&mdash;<a href='%s'>post seul</a>]</small>\\n%s\\n<footer>by <strong><a href='%s'>%s</a></strong></footer>\\n</body>\\n\\n</html>" "$realname" "$css" "$realname" "../$blogfile" "$base" "$basefile" "$(cat "$webdir/blog/.drafts/$basefile")" "$website" "$name" > "$webdir/blog/$basefile"
+ 	printf "\\n<item>\\n<title>%s</title>\\n<guid>%s%s#%s</guid>\\n<pubDate>%s</pubDate>\\n<description><![CDATA[\\n%s\\n]]></description>\\n</item>\\n\\n" "$realname" "$website" "$blogfile" "$base" "$rssdate" "$(cat "$webdir/blog/.drafts/$basefile")" >  "$tmpdir/rss"
+-	printf "<div class='entry'>\\n<h2 id='%s'>%s</h2>\\n<small>[<a href='#%s'>link</a>&mdash;<a href='%s'>standalone</a>]</small>\\n%s\\n<small>%s</small>\\n</div>\\n" "$base" "$realname" "$base" "blog/$basefile" "$(cat "$webdir/blog/.drafts/$basefile")" "$webdate" > "$tmpdir/html"
++	printf "<div class='entry'>\\n<h2 id='%s'>%s</h2>\\n<small>[<a href='#%s'>lien</a>&mdash;<a href='%s'>post seul</a>]</small>\\n%s\\n<small>%s</small>\\n</div>\\n" "$base" "$realname" "$base" "blog/$basefile" "$(cat "$webdir/blog/.drafts/$basefile")" "$webdate" > "$tmpdir/html"
+ 	printf "<li>%s &ndash; <a href=\"blog/%s\">%s</a></li>\\n" "$(date '+%Y %b %d')" "$basefile" "$realname" > "$tmpdir/index"
+ 	sed -i "/<!-- LB -->/r $tmpdir/html" "$blogfile"
+ 	sed -i "/<!-- LB -->/r $tmpdir/rss" "$rssfile"
+@@ -53,24 +54,24 @@
+ 	rm -f "$webdir/blog/.drafts/$chosen"
+ }
+ 
+-confirm() { read -erp "Really $1 \"$base\"? (y/N) " choice && echo "$choice" | grep -i "^y$" >/dev/null || exit 1 ;}
++confirm() { read -erp "Voulez-vous vraiment $1 \"$base\"? (y/N) " choice && echo "$choice" | grep -i "^y$" >/dev/null || exit 1 ;}
+ 
+ delete() { \
+ 	sed -i "/<item/{:a;N;/<\\/item>/!ba};/#$base<\\/guid/d" $rssfile
+ 	sed -i "/<div class='entry'>/{:a;N;/<\\/div>/!ba};/id='$base'/d" $blogfile
+ 	sed -i "/<li>.*<a href=\"blog\\/$base.html\">/d" $indexfile
+-	rm "$webdir/blog/$basefile" 2>/dev/null && printf "Old blog entry removed.\\n" ;}
++	rm "$webdir/blog/$basefile" 2>/dev/null && printf "Ancien post supprimé.\\n" ;}
+ 
+ revise() { awk '/^<small>\[/{flag=1;next}/<footer>/{flag=0}flag' "$webdir/blog/$chosen" > "$webdir/blog/.drafts/$basefile"
+ 	"$EDITOR" "$webdir/blog/.drafts/$basefile"
+-	printf "Revision stored in blog/.drafts. Publish as normal entry when desired.\\n" ;}
++	printf "Modification stockée dans le brouillon blog/.drafts. Vous pourrez publier quand vous le souhaitez.\\n" ;}
+ 
+ case "$1" in
+ 	n*) newpost ;;
+ 	e*) listandReturn "$webdir"/blog/.drafts/ edit && "$EDITOR" "$webdir/blog/.drafts/$chosen" ;;
+ 	p*) listandReturn "$webdir"/blog/.drafts/ publish && publish ;;
+-	t*) listandReturn "$webdir"/blog/.drafts/ trash && confirm trash && rm -f "$webdir/blog/.drafts/$chosen" && sed -i "/ \"$base.html\"/d" "$webdir/blog/.htaccess" ; printf "Draft deleted.\\n" ;;
++	t*) listandReturn "$webdir"/blog/.drafts/ trash && confirm trash && rm -f "$webdir/blog/.drafts/$chosen" && sed -i "/ \"$base.html\"/d" "$webdir/blog/.htaccess" ; printf "Brouillon supprimé\\n" ;;
+ 	d*) listandReturn "$webdir"/blog/ delete && confirm delete && delete && sed -i "/ \"$base.html\"/d" "$webdir/blog/.htaccess" ;;
+ 	r*) listandReturn "$webdir"/blog/ revise && revise ;;
+-	*) printf "lb blog system by Luke Smith <luke@lukesmith.xyz>\\nUsage:\\n  lb n:\\tnew draft\\n  lb e:\\tedit draft\\n  lb p:\\tpublish/finalize draft\\n  lb r:\\trevise published entry\\n  lb t:\\tdiscard draft\\n  lb d:\\tdelete published entry\\n\\nBe sure to have the following pattern added to your RSS feed, blog file and blog index:\\n\\n<!-- LB -->\\n\\nNew content will be added directly below that sequence. This is required.\\nSee https://github.com/LukeSmithxyz/lb for more.\\n" ;;
++	*) printf "lb, un système de blogage par Luke Smith <luke@lukesmith.xyz>\\nUsage:\\n  lb n:\\tnouveau brouillon\\n  lb e:\\téditer un brouillon\\n  lb p:\\tpublier ou finaliser un brouillon\\n  lb r:\\tmodifier un post\\n  lb t:\\tjeter un brouillon\\n  lb d:\\tsupprimer un post\\n\\nAssurez vous d'avoir cette balise dans votre flux RSS, fichier de blog and d'index de blog:\\n\\n<!-- LB -->\\n\\nLe contenu publié s'affichera en dessous de cette balise. \\nVoir https://github.com/LukeSmithxyz/lb pour plus d'informations.\\n" ;;
+ esac

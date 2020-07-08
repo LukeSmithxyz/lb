@@ -20,21 +20,19 @@ fi
 
 newpost() { read -erp "Give a title for your post:
 	" title
-	echo "$title" | grep "\"" >/dev/null && printf "Double quotation marks (\") are not allowed in entry titles.\\n" && exit
+	echo "$title" | grep -q "\"" && printf "Double quotation marks (\") are not allowed in entry titles.\\n" && exit
 	url="$(echo "$title" | iconv -cf UTF-8 -t ASCII//TRANSLIT | tr -d '[:punct:]' | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed "s/-\+/-/g;s/\(^-\|-\$\)//g")"
 	echo "AddDescription \"$title\" \"$url.html\"" >> "$webdir/blog/.htaccess" || { echo "Error: Is htaccess writeable?"; exit; }
-	[ -f "$webdir/blog/.drafts/$url.html" ] && echo "There is already an existing draft entry of that same name/URL." && exit
-	[ -f "$webdir/blog/$url.html" ] && echo "There is already an existing published entry of that same name/URL." && exit
+	( [ -f "$webdir/blog/.drafts/$url.html" ] || [ -f "$webdir/blog/$url.html" ] ) && echo "There is already an existing draft or post of that same name/URL." && exit
 	$EDITOR "$webdir/blog/.drafts/$url.html" ;}
 
 listandReturn() {
-	filecount=$(ls "$1" | wc -l)
-        [ $filecount -eq 0 ] && echo "There's nothing to $2." && exit 1
-        number=1
-        [ $filecount -eq 1 ] || {
-                ls -rc "$1" | awk -F '/' '{print $NF}' | nl
-                read -erp "Pick an entry by number to $2, or press Ctrl-C to cancel. " number
-        }
+	case "$(ls "$1" | wc -l)" in
+		0) echo "There's nothing to $2." && exit 1 ;;
+		1) number=1 ;;
+		*) ls -rc "$1" | awk -F '/' '{print $NF}' | nl
+                read -erp "Pick an entry by number to $2, or press Ctrl-C to cancel. " number ;;
+	esac
 	chosen="$(ls -rc "$1" | nl | grep -w "$number" | awk '{print $2}')"
 	basefile="$(basename "$chosen")" && base="${basefile%.*}"
 }
@@ -59,13 +57,13 @@ publish() { \
 	rm -f "$webdir/blog/.drafts/$chosen"
 }
 
-confirm() { read -erp "Really $1 \"$base\"? (y/N) " choice && echo "$choice" | grep -i "^y$" >/dev/null || exit 1 ;}
+confirm() { read -erp "Really $1 \"$base\"? (y/N) " choice && echo "$choice" | grep -qi "^y$" || exit 1 ;}
 
 delete() { \
-	sed -i "/<item/{:a;N;/<\\/item>/!ba};/#$base<\\/guid/d" $rssfile
-	sed -i "/<div class='entry'>/{:a;N;/<\\/div>/!ba};/id='$base'/d" $blogfile
-	sed -i "/<li>.*<a href=\"blog\\/$base.html\">/d" $indexfile
-	rm "$webdir/blog/$basefile" 2>/dev/null && printf "Old blog entry removed.\\n" ;}
+	sed -i "/<item/{:a;N;/<\\/item>/!ba};/#$base<\\/guid/d" "$rssfile"
+	sed -i "/<div class='entry'>/{:a;N;/<\\/div>/!ba};/id='$base'/d" "$blogfile"
+	sed -i "/<li>.*<a href=\"blog\\/$base.html\">/d" "$indexfile"
+	rm -f "$webdir/blog/$basefile" && printf "Old blog entry removed.\\n" ;}
 
 revise() { awk '/^<small>\[/{flag=1;next}/<footer>/{flag=0}flag' "$webdir/blog/$chosen" > "$webdir/blog/.drafts/$basefile"
 	"$EDITOR" "$webdir/blog/.drafts/$basefile"

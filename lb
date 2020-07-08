@@ -27,11 +27,17 @@ newpost() { read -erp "Give a title for your post:
 	[ -f "$webdir/blog/$url.html" ] && echo "There is already an existing published entry of that same name/URL." && exit
 	$EDITOR "$webdir/blog/.drafts/$url.html" ;}
 
-listandReturn() { printf "Listing contents of %s.\\n" "$1"
-	ls -rc "$1" | awk -F '/' '{print $NF}' | nl
-	read -erp "Pick an entry by number to $2, or press ctrl-c to cancel. " number
-	chosen="$(ls -rc "$1" | nl | grep -w  "$number" | awk '{print $2}')"
-	basefile="$(basename "$chosen")" && base="${basefile%.*}" ;}
+listandReturn() {
+	filecount=$(ls "$1" | wc -l)
+        [ $filecount -eq 0 ] && echo "There's nothing to $2." && exit 1
+        number=1
+        [ $filecount -eq 1 ] || {
+                ls -rc "$1" | awk -F '/' '{print $NF}' | nl
+                read -erp "Pick an entry by number to $2, or press Ctrl-C to cancel. " number
+        }
+	chosen="$(ls -rc "$1" | nl | grep -w "$number" | awk '{print $2}')"
+	basefile="$(basename "$chosen")" && base="${basefile%.*}"
+}
 
 publish() { \
 	delete

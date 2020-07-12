@@ -1,21 +1,295 @@
-html {
-	max-width: 1050px;
-	margin-left: auto;
-	margin-right: auto;
-	margin-top: 30px;
-	color: #333;
-	padding-bottom: 200px;
-	 }
+:root {
+    --color0: #282828;
+    --color1: #cc241d;
+    --color2: #98971a;
+    --color3: #d79921;
+    --color4: #458588;
+    --color5: #b16286;
+    --color6: #689d6a;
+    --color7: #a89984;
+    --color8: #928374;
+    --color9: #fb4934;
+    --color10: #b8bb26;
+    --color11: #fabd2f;
+    --color12: #83a598;
+    --color13: #d3869b;
+    --color14: #8ec07c;
+    --color15: #ebdbb2;
+    --color256: #1d2021;
+    --color257: #ebdbb2;
+}
 
-a {color: royalblue; }
-a:hover {color: lightblue; }
+footer img {
+    height: 1.25em;
+}
 
+li img {
+    height: 1.25em;
+}
+
+h1 img {
+    height: 1em;
+}
+
+h2 img {
+    height: 1em;
+    padding-top: 1em;
+}
+
+h3 {
+    color: var(--color1);
+}
+
+h3 img {
+    height: 1em;
+}
+
+body {
+    /*overflow cant be changed on body. since this type of styling is not for the body tag.*/
+    max-width: 1050px;
+    margin-left: auto;
+    margin-right: auto;
+    background: var(--color256);
+    color: var(--color15);
+    padding: 1em;
+}
+
+a {
+    color: var(--color6);
+    text-decoration: none;
+}
+a:hover {
+    color: var(--color12);
+}
+
+a img:hover {
+    background: rgba(0, 0, 0, 0);
+    transition: .2s;
+    transform: scale(2.5, 2.5);
+}
+
+h1 {
+    color: var(--color4);
+    font-weight: Bold;
+    text-shadow: -1px 3px 3px rgba(0, 0, 0, 0.68);
+    text-align: center;
+}
+
+h2 {
+    color: var(--color3);
+    font-weight: normal;
+}
+
+.hiddiv {
+    display: none;
+}
+.qr:hover {
+    color: goldenrod;
+}
+.qr:hover .hiddiv {
+    display: block;
+    float: right;
+}
+.hiddiv img {
+    height: 200px;
+}
+
+#cat {
+    /*'float: center' does nothing btw. and cat should be an class, as its used so many times in the html*/
+    display: inline;
+}
+
+#links {
+    font-size: large;
+    text-align: center;
+    margin: auto;
+    max-width: 700px;
+    background-color: var(--color256);
+    padding: 5px;
+    border-radius: 10px;
+    /* margin-bottom: 6em */
+}
+
+#links img {
+    height: 1.25em;
+}
+
+/* Blog entry: */
+
+/*i added a more red-ish and darker background here to make it easier on the eyes to seperate the blocks. and also to go with the red border a little better, as the blue on the left ties in the same way with the body*/
 .entry {
-	border-left: 10px solid darkslategray;
-	padding: 0px 10px 0px 10px;
-	border-radius: 0 30px 30px 0;
-	margin-bottom: 20px;
-	background-color: #eee;
-	}
+    padding: 10px;
+    border-radius: 0 5px 18px 0;
+    margin-bottom: 50px;
+    background: #1b1b1b;
+    border: 1px solid var(--color1);
+    border-left: 10px solid var(--color4);
+}
+.entry h2 {
+    margin: 5px auto 2px auto;
+}
+.entry small {
+    color: var(--color15);
+}
+footer strong {
+    font-weight: bold;
+}
 
-.entry h2 { margin: 5px auto 2px auto; }
+footer {
+	clear: both;
+	text-align: center;
+	padding-top: 2em;
+}
+
+/*
+    i spaced out the dt parts here to make it easier for the eyes to navigate the paragraphs
+*/
+dt {
+    font-weight: bold;
+    margin-top: 2em;
+}
+dt img {
+    height: 1em;
+}
+
+/* Class name of video thumbnails in videos.html */
+.image {
+    width: 175px !important;
+    table-layout: fixed;
+    margin-left: auto;
+    margin-right: auto;
+    display: inline-table;
+    padding: 0px;
+}
+.image figcaption img {
+    height: 1em;
+}
+img.centered {
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+}
+figcaption {
+    padding: 0px;
+    max-width: 175px;
+}
+code {
+    color: var(--color2);
+    overflow-x: auto;
+}
+
+h3 {
+}
+
+/*align is not always supported anymore so i tend to just use 'auto' on left and right margin if you arent using flexbox or grid*/
+pre {
+    margin: auto;
+    margin-top: 3em;
+    background: var(--color256);
+    border: 1px solid var(--color8);
+    border-radius: 4px;
+    padding: 5px;
+    display: block;
+    max-width: 900px;
+}
+
+.indexcolname {
+    max-width: 100px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.indexcoldesc {
+    font-weight: bold;
+    padding: 10px;
+    font-size: large;
+}
+.indexcollastmod,
+.indexcolsize {
+    font-size: small;
+}
+#indexlist {
+    margin: 0px auto;
+}
+.centerpiece {
+    margin: auto;
+    margin: 0px auto;
+}
+
+/* Used in library.html */
+.booklist dt {
+    display: list-item;
+    list-style-type: square;
+    font-weight: normal;
+}
+.booklist dd {
+    display: none;
+}
+.booklist:hover dd {
+    display: block;
+}
+/* The mic class is for books featured in a NotRelated episode. */
+.mic:before {
+    content: "🎙️";
+}
+
+.mic {
+    list-style: none;
+    padding-left: 1em;
+    text-indent: -1em;
+    margin-left: 0;
+}
+
+.A,
+span.i,
+pre a.i {
+    color: var(--color10);
+}
+
+.D,
+span.d,
+pre a.d {
+    color: var(--color9);
+}
+
+.even, .odd {
+	min-height: 300px;
+	text-align: left;
+}
+
+.even img  {
+padding-top: 1em;
+float: right;
+max-width: 400px;
+max-height: 225px;
+padding: 20px;
+}
+
+.odd img {
+padding-top: 1em;
+float: left;
+max-width: 400px;
+max-height: 225px;
+padding: 20px;
+}
+
+#content td {
+	max-width: 400px;
+}
+
+#content {
+	max-width: inherit;
+}
+
+#blob {
+	white-space: pre-wrap;
+}
+
+#index {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+html {
+	padding-bottom: 500px;
+}

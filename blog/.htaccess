@@ -1,1 +1,2 @@
-AddDescription "This is what a post looks like" this-is-what-a-post-looks-like.html
+Options +Indexes
+AddDescription "This is what a post looks like" "this-is-what-a-post-looks-like.html" #Sun, 12 Jul 2020 21:28:03 +0200

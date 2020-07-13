@@ -27,9 +27,10 @@ newpost() { read -erp "Give a title for your post:
 	$EDITOR "$webdir/blog/.drafts/$url.html" ;}
 
 listandReturn() {
+	printf "Listing contents of %s\\n" "$1"
 	case "$(ls "$1" | wc -l)" in
 		0) echo "There's nothing to $2." && exit 1 ;;
-		1) number=1 ;;
+		1) number=1 && printf "There's only one entry to %s.\\nDefaulting selection to %s\\n" "$2" "$(ls -rc "$1" | awk -F '/' '{print $NF}')" ;;
 		*) ls -rc "$1" | awk -F '/' '{print $NF}' | nl
                 read -erp "Pick an entry by number to $2, or press Ctrl-C to cancel. " number ;;
 	esac
@@ -38,7 +39,7 @@ listandReturn() {
 }
 
 publish() { \
-	delete
+	delete draft
 	htaccessentry=$(grep "$basefile" "$webdir/blog/.htaccess")
 	realname="$(echo "$htaccessentry" | cut -d'"' -f2)"
 	rssdate="$(grep "$basefile" blog/.htaccess | sed "s/.*\.html\"* *#*//g" | tr -d '\n')"
@@ -63,7 +64,7 @@ delete() { \
 	sed -i "/<item/{:a;N;/<\\/item>/!ba};/#$base<\\/guid/d" "$rssfile"
 	sed -i "/<div class='entry'>/{:a;N;/<\\/div>/!ba};/id='$base'/d" "$blogfile"
 	sed -i "/<li>.*<a href=\"blog\\/$base.html\">/d" "$indexfile"
-	rm -f "$webdir/blog/$basefile" && printf "Old blog entry removed.\\n" ;}
+	rm -f "$webdir/blog/$basefile" && [[ "$1" != "draft" ]] && printf "Old blog entry removed.\\n";}
 
 revise() { awk '/^<small>\[/{flag=1;next}/<footer>/{flag=0}flag' "$webdir/blog/$chosen" > "$webdir/blog/.drafts/$basefile"
 	"$EDITOR" "$webdir/blog/.drafts/$basefile"

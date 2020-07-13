@@ -30,7 +30,7 @@ listandReturn() {
 	printf "Listing contents of %s\\n" "$1"
 	case "$(ls "$1" | wc -l)" in
 		0) echo "There's nothing to $2." && exit 1 ;;
-		1) number=1 && printf "There's only one blog entry to %s.\\nDefaulting selection to %s\\n" "$2" "$(ls -rc "$1" | awk -F '/' '{print $NF}')" ;;
+		1) number=1 && printf "There's only one entry to %s.\\nDefaulting selection to %s\\n" "$2" "$(ls -rc "$1" | awk -F '/' '{print $NF}')" ;;
 		*) ls -rc "$1" | awk -F '/' '{print $NF}' | nl
                 read -erp "Pick an entry by number to $2, or press Ctrl-C to cancel. " number ;;
 	esac

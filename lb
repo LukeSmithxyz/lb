@@ -34,7 +34,7 @@ listandReturn() {
 		*) ls -rc "$1" | awk -F '/' '{print $NF}' | nl
                 read -erp "Pick an entry by number to $2, or press Ctrl-C to cancel. " number ;;
 	esac
-	chosen="$(ls -rc "$1" | nl | grep -w "$number" | awk '{print $2}')"
+	chosen="$(ls -rc "$1" | nl | grep -w " $number" | awk '{print $2}')"
 	basefile="$(basename "$chosen")" && base="${basefile%.*}"
 }
 

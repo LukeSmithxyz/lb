@@ -24,7 +24,12 @@ newpost() { read -erp "Give a title for your post:
 	url="$(echo "$title" | iconv -cf UTF-8 -t ASCII//TRANSLIT | tr -d '[:punct:]' | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed "s/-\+/-/g;s/\(^-\|-\$\)//g")"
 	echo "AddDescription \"$title\" \"$url.html\"" >> "$webdir/blog/.htaccess" || { echo "Error: Is htaccess writeable?"; exit; }
 	( [ -f "$webdir/blog/.drafts/$url.html" ] || [ -f "$webdir/blog/$url.html" ] ) && echo "There is already an existing draft or post of that same name/URL." && exit
-	$EDITOR "$webdir/blog/.drafts/$url.html" ;}
+	if [[ $1 == n ]]; then
+	  $EDITOR "$webdir/blog/.drafts/$url.html"
+	else
+	  $EDITOR "$webdir/blog/.drafts/$url.md"
+	fi ;}
+
 
 listandReturn() {
 	printf "Listing contents of %s\\n" "$1"
@@ -38,7 +43,18 @@ listandReturn() {
 	basefile="$(basename "$chosen")" && base="${basefile%.*}"
 }
 
-publish() { \
+getExtension() {
+  : "${1%/}"
+  printf '%s\n' "${_##*.}"
+}
+
+publish() {
+	if [[ $(getExtension $chosen) == md ]]; then
+	  markdown "$webdir/blog/.drafts/$chosen" > "$webdir/blog/.drafts/${chosen/.md/.html}"
+	  rm -rf "$webdir/blog/.drafts/$chosen"
+	  chosen="${chosen/.md/.html}"
+	  basefile="$(basename "$chosen")" && base="${basefile%.*}"
+	fi
 	delete draft
 	htaccessentry=$(grep "$basefile" "$webdir/blog/.htaccess")
 	realname="$(echo "$htaccessentry" | cut -d'"' -f2)"
@@ -71,11 +87,12 @@ revise() { awk '/^<small>\[/{flag=1;next}/<footer>/{flag=0}flag' "$webdir/blog/$
 	printf "Revision stored in blog/.drafts. Publish as normal entry when desired.\\n" ;}
 
 case "$1" in
-	n*) newpost ;;
+	n*) newpost n ;;
+	m*) newpost m ;;
 	e*) listandReturn "$webdir"/blog/.drafts/ edit && "$EDITOR" "$webdir/blog/.drafts/$chosen" ;;
 	p*) listandReturn "$webdir"/blog/.drafts/ publish && publish ;;
 	t*) listandReturn "$webdir"/blog/.drafts/ trash && confirm trash && rm -f "$webdir/blog/.drafts/$chosen" && sed -i "/ \"$base.html\"/d" "$webdir/blog/.htaccess" ; printf "Draft deleted.\\n" ;;
 	d*) listandReturn "$webdir"/blog/ delete && confirm delete && delete && sed -i "/ \"$base.html\"/d" "$webdir/blog/.htaccess" ;;
 	r*) listandReturn "$webdir"/blog/ revise && revise ;;
-	*) printf "lb blog system by Luke Smith <luke@lukesmith.xyz>\\nUsage:\\n  lb n:\\tnew draft\\n  lb e:\\tedit draft\\n  lb p:\\tpublish/finalize draft\\n  lb r:\\trevise published entry\\n  lb t:\\tdiscard draft\\n  lb d:\\tdelete published entry\\n\\nBe sure to have the following pattern added to your RSS feed, blog file and blog index:\\n\\n<!-- LB -->\\n\\nNew content will be added directly below that sequence. This is required.\\nSee https://github.com/LukeSmithxyz/lb for more.\\n" ;;
+	*) printf "lb blog system by Luke Smith <luke@lukesmith.xyz>\\nUsage:\\n  lb n:\\tnew draft\\n  lb m:\tnew draft in markdown\n  lb e:\\tedit draft\\n  lb p:\\tpublish/finalize draft\\n  lb r:\\trevise published entry\\n  lb t:\\tdiscard draft\\n  lb d:\\tdelete published entry\\n\\nBe sure to have the following pattern added to your RSS feed, blog file and blog index:\\n\\n<!-- LB -->\\n\\nNew content will be added directly below that sequence. This is required.\\nSee https://github.com/LukeSmithxyz/lb for more.\\n" ;;
 esac

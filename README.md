@@ -1,10 +1,15 @@
-# lb -- Luke's Blog Script
+# lb and sup -- Luke's Blog Script and Site Updater
 
-Blogs and RSS feeds in less than 100 lines of shell script, actually, right now, less than 80.  `lb` stands for whatever. Maybe "Luke's blog", maybe "lightweight blog", maybe "less bloat", doesn't matter that much.
+Blogs and RSS feeds in less than 100 SLOC. `lb` stands for whatever. Maybe "Luke's blog", maybe "lightweight blog", maybe "less bloat", doesn't matter that much.
 
 [Video Showcase](https://www.youtube.com/watch?v=S1WQlr42xDM)
 
-## Features
+I've also added `sup`, which is even more minimal and focused on old-school static websites with no blog, but a need for a site updater! See it at the bottom of this README.
+
+Both `lb` and `sup` are mutually compatible and you can use them both on the same site and even feed into the same RSS feed.
+`lb` makes new blog posts which go to make standalone pages, a rolling blog file and an RSS entry. `sup`, on the other hand, is if you manually add a new page to your website and want to make people know about that change. It can be run multiple times on a page for each time it is updated.
+
+## `lb` Features
 
 `lb` is an extremely small shell script that lets you write blog posts and will format them in all the ways you could ever want. Here's what it will produce:
 
@@ -56,3 +61,28 @@ When you `finalize` a blog post, it will be added directly below that line in th
 - `blog/.htaccess` acts as a "database" file. `lb` stores filenames with their corresponding proper names and publishing dates there.
 - The other files in this repo just illustrate how you can use `lb`. Only the `lb` script itself is necessary.
 - Your `$EDITOR` variable should be set to your preferred text editor, vim will be assumed if you don't have one set.
+
+# `sup` -- Site updater or "What'**s up**?"
+
+If having a "blog" is too cringe for you and you just want an RSS feed where you can post updates about recently changed pages, use `sup`.
+
+Let's say you make a page called `favorite-programs.html`.
+
+Just run `sup favorite-programs.html` and that new page's content will be added to the RSS feed.
+
+Specifically, `sup` will get only the `<body>` tag, but also exclude the `<nav>` and `<footer>` tags. All the rest of the content will be directly viewable via RSS.
+
+If you update that page in the future, run `sup` on it again and it will prompt you for an update message
+
+## Installation of `sup`
+
+Just add the
+
+```
+<!-- LB -->
+```
+
+line in your RSS feed like for `lb` above and be sure to change the variables (rss file name and website) in the `sup` script.
+
+
+**`sup` and `lb` are fully compatible and can be run on the same website for different purposes.**

@@ -2,7 +2,7 @@
 
 Blogs and RSS feeds in less than 100 SLOC. `lb` stands for whatever. Maybe "Luke's blog", maybe "lightweight blog", maybe "less bloat", doesn't matter that much.
 
-[Video Showcase](https://www.youtube.com/watch?v=S1WQlr42xDM)
+[Video Showcase](https://videos.lukesmith.xyz/videos/watch/dee2921b-3f85-4801-b06a-328d0758a7b3)
 
 I've also added `sup`, which is even more minimal and focused on old-school static websites with no blog, but a need for a site updater! See it at the bottom of this README.
 

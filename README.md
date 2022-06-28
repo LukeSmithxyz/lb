@@ -1,4 +1,11 @@
+# This repo is archived.
+
+I no longer use or maintain this script as of several years now. I moved to
+Hugo to deal with static sites to have tagging abilities and other things.
+
+
 # lb and sup -- Luke's Blog Script and Site Updater
+
 
 Blogs and RSS feeds in less than 100 SLOC. `lb` stands for whatever. Maybe "Luke's blog", maybe "lightweight blog", maybe "less bloat", doesn't matter that much.
 
